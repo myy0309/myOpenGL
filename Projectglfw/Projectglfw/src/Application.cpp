@@ -17,15 +17,19 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 // Shaders
 const GLchar* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 position;\n"
+"layout (location = 1) in vec4 color;\n"
+"out vec4 ourColor;\n"
 "void main()\n"
 "{\n"
-"gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+"gl_Position = vec4(position, 1.0);\n"
+"ourColor = color;\n"
 "}\0";
 const GLchar* fragmentShaderSource = "#version 330 core\n"
 "out vec4 color;\n"
+"uniform vec4 ourColor;\n"  // uniform ourColor 定义在mainloop中
 "void main()\n"
 "{\n"
-"color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"color = ourColor;\n"
 "}\n\0";
 
 // The MAIN function, from here we start the application and run the game loop
@@ -122,21 +126,30 @@ int main()
     // Game loop
     while (!glfwWindowShouldClose(window))
     {
-        // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
+        // 检测并调用事件
         glfwPollEvents();
 
-        // Render
-        // Clear the colorbuffer
+        // 渲染
+        // 清空颜色缓冲
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw our first triangle
+        // 记得激活着色器
         glUseProgram(shaderProgram);
+
+        // 更新uniform颜色
+        GLfloat timeValue = glfwGetTime();
+        GLfloat greenValue = (sin(timeValue) / 2) + 0.5;
+        GLint vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+        // 绘制三角形
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
 
         // Swap the screen buffers
+        // 没有颜色变化的三角形就不需要 swap buffers
         glfwSwapBuffers(window);
     }
     // Properly de-allocate all resources once they've outlived their purpose
