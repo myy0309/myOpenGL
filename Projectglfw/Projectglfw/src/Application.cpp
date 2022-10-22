@@ -17,19 +17,19 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 // Shaders
 const GLchar* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 position;\n"
-"layout (location = 1) in vec4 color;\n"
-"out vec4 ourColor;\n"
+"layout (location = 1) in vec3 color;\n"
+"out vec3 ourColor;\n"
 "void main()\n"
 "{\n"
 "gl_Position = vec4(position, 1.0);\n"
 "ourColor = color;\n"
 "}\0";
 const GLchar* fragmentShaderSource = "#version 330 core\n"
+"in vec3 ourColor;\n"
 "out vec4 color;\n"
-"uniform vec4 ourColor;\n"  // uniform ourColor 定义在mainloop中
 "void main()\n"
 "{\n"
-"color = ourColor;\n"
+"color = vec4(ourColor, 1.0f);\n"
 "}\n\0";
 
 // The MAIN function, from here we start the application and run the game loop
@@ -56,9 +56,7 @@ int main()
     glewInit();
 
     // Define the viewport dimensions
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, WIDTH, HEIGHT);
 
 
     // Build and compile our shader program
@@ -103,9 +101,10 @@ int main()
 
     // Set up vertex data (and buffer(s)) and attribute pointers
     GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f, // Left  
-         0.5f, -0.5f, 0.0f, // Right 
-         0.0f,  0.5f, 0.0f  // Top   
+        // Positions         // Colors
+         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // Bottom Right
+        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // Bottom Left
+         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // Top 
     };
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -116,40 +115,34 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
+    // Color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // Note that this is allowed, the call to glVertexAttribPointer registered VBO as the currently bound vertex buffer object so afterwards we can safely unbind
+    glBindVertexArray(0); // Unbind VAO
 
-    glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
 
     // Game loop
     while (!glfwWindowShouldClose(window))
     {
-        // 检测并调用事件
+        // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
         glfwPollEvents();
 
-        // 渲染
-        // 清空颜色缓冲
+        // Render
+        // Clear the colorbuffer
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // 记得激活着色器
+        // Draw the triangle
         glUseProgram(shaderProgram);
-
-        // 更新uniform颜色
-        GLfloat timeValue = glfwGetTime();
-        GLfloat greenValue = (sin(timeValue) / 2) + 0.5;
-        GLint vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-
-        // 绘制三角形
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
 
         // Swap the screen buffers
-        // 没有颜色变化的三角形就不需要 swap buffers
         glfwSwapBuffers(window);
     }
     // Properly de-allocate all resources once they've outlived their purpose
