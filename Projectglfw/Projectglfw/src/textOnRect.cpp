@@ -20,6 +20,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
 
+// Set the initial value of mix factor
+float mix_factor = 0.0f;
+
 // The MAIN function, from here we start the application and run the game loop
 int main()
 {
@@ -99,14 +102,14 @@ int main()
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1); // All upcoming GL_TEXTURE_2D operations now have effect on our texture object
     // Set our texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// Set texture wrapping to GL_REPEAT
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     // Set texture filtering
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // Load, create texture and generate mipmaps
     int width, height;
-    unsigned char* image = SOIL_load_image("..\\res\\textures\\lines.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+    unsigned char* image = SOIL_load_image("..\\res\\textures\\mount.jpg", &width, &height, 0, SOIL_LOAD_RGB);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
     SOIL_free_image_data(image);
@@ -123,7 +126,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // Load, create texture and generate mipmaps
-    image = SOIL_load_image("..\\res\\textures\\mount.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+    image = SOIL_load_image("..\\res\\textures\\bird.jpg", &width, &height, 0, SOIL_LOAD_RGB);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
     SOIL_free_image_data(image);
@@ -145,12 +148,19 @@ int main()
         ourShader.Use();
 
         // Bind Textures using texture units
+        // bind texture1 to unit 0
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
+        // let sampler ourTexture1 to sample unit 0
         glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture1"), 0);
+        // bind texture2 to unit 1
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
+        // let sampler ourTexture2 to sample unit 1
         glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture2"), 1);
+
+        // Set the mix factor
+        glUniform1f(glGetUniformLocation(ourShader.Program, "mix_factor"), mix_factor);
 
         // Draw container
         glBindVertexArray(VAO);
@@ -172,6 +182,20 @@ int main()
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
+    // if user press esc, close the window
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+    // Change value of uniform with arrow keys (sets amount of texture mix)
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS) // press 'up'
+    {
+        mix_factor += 0.05f;
+        if (mix_factor >= 1.0f)
+            mix_factor = 1.0f;
+    }
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) // press 'down'
+    {
+        mix_factor -= 0.05f;
+        if (mix_factor <= 0.0f)
+            mix_factor = 0.0f;
+    }
 }
