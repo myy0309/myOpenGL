@@ -146,16 +146,6 @@ int main()
         // Activate shader
         ourShader.Use();
 
-        // Generate the transform matrix
-        glm::mat4 trans = glm::mat4(1.0f); // generate a 4x4 indentity matrix
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        trans = glm::rotate(trans, (GLfloat)glfwGetTime() * (glm::radians(50.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
-        // Set up uniform variable 'transform' in vertex shader
-        // get the location of 'transform'
-        GLuint transformLoc = glGetUniformLocation(ourShader.Program, "transform");
-        // put value in 'transform'
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
         // Bind Textures using texture units
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
@@ -163,6 +153,32 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
         glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture2"), 1);
+
+        // Generate the transform matrix
+        glm::mat4 trans1 = glm::mat4(1.0f); // generate a 4x4 indentity matrix
+        trans1 = glm::translate(trans1, glm::vec3(0.5f, -0.5f, 0.0f));
+        trans1 = glm::rotate(trans1, (GLfloat)glfwGetTime() * (glm::radians(50.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
+        // Set up uniform variable 'transform' in vertex shader
+        // get the location of 'transform'
+        GLuint transformLoc = glGetUniformLocation(ourShader.Program, "transform");
+        // put value in 'transform'
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans1));
+
+        // Draw container
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        // Generate the transform matrix
+        glm::mat4 trans2 = glm::mat4(1.0f); // generate a 4x4 indentity matrix
+        float scale_factor = sin((GLfloat)glfwGetTime());
+        trans2 = glm::translate(trans2, glm::vec3(-0.5f, 0.5f, 0.0f));
+        trans2 = glm::scale(trans2, glm::vec3(scale_factor, scale_factor, scale_factor));
+        // Set up uniform variable 'transform' in vertex shader
+        // get the location of 'transform'
+        transformLoc = glGetUniformLocation(ourShader.Program, "transform");
+        // put value in 'transform'
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans2));
 
         // Draw container
         glBindVertexArray(VAO);
