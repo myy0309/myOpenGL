@@ -19,14 +19,17 @@
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void do_movement();
 
 // Global variables
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
-// Camera control
-float cameraX = 0.0f;
-float cameraY = 0.0f;
-float cameraZ = -3.0f;
+// Record which key is pressed
+bool keys[1024];
+// Camera
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 
 // The MAIN function, from here we start the application and run the game loop
@@ -199,6 +202,7 @@ int main()
     {
         // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
         glfwPollEvents();
+        do_movement();
 
         // Render
         // Clear the colorbuffer
@@ -221,9 +225,11 @@ int main()
         ourShader.Use();
 
         // Create transformations
+        // initialize transform matrix
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(cameraX, cameraY, cameraZ));
+        // construct transform matrix
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
         // Get their uniform location
         GLint modelLoc = glGetUniformLocation(ourShader.Program, "model");
@@ -261,33 +267,38 @@ int main()
     return 0;
 }
 
+// Decide what to do after specific keys are pressed 
+void do_movement()
+{
+    // cameraSpeed controls how much the camera moves when a key is pressed
+    GLfloat cameraSpeed = 0.005f;
+    // 'W' and 'S' move camera forward and backward
+    if (keys[GLFW_KEY_W])
+        // z coord of cam actually decreases, cam moves nearer to objects
+        cameraPos += cameraSpeed * cameraFront;
+    if (keys[GLFW_KEY_S])
+        // z coord of cam actually increases, cam moves far away from objects
+        cameraPos -= cameraSpeed * cameraFront;
+    // 'A' and 'D' move camera left and right
+    if (keys[GLFW_KEY_A])
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (keys[GLFW_KEY_D])
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    // 'R' and 'F' move camera up and down
+    if (keys[GLFW_KEY_R])
+        cameraPos += glm::normalize(glm::cross(cameraFront, glm::vec3(1, 0, 0))) * cameraSpeed;
+    if (keys[GLFW_KEY_F])
+        cameraPos -= glm::normalize(glm::cross(cameraFront, glm::vec3(1, 0, 0))) * cameraSpeed;
+}
+
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
-    // use keyboard to control view matrix -> obejcts positions
-    // use 'w' and 's' to move objects forward and backward (in z axis)
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cameraZ += 0.1f;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cameraZ -= 0.1f;
-    }
-    // use 'a' and 'd' to move objects left and right (in x axis)
-    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cameraX += 0.1f;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cameraX -= 0.1f;
-    }
-    // use 'up' and 'down' to move objects up and down (in y axis)
-    else if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-    {
-        cameraY += 0.1f;
-    }
-    else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-    {
-        cameraY -= 0.1f;
-    }
+    // record which keys are pressed
+    if (action == GLFW_PRESS)
+        keys[key] = true;
+    else if (action == GLFW_RELEASE)
+        keys[key] = false;
 }
