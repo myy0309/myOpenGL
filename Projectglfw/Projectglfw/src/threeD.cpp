@@ -20,8 +20,14 @@
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
+// Global variables
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
+// Camera control
+float cameraX = 0.0f;
+float cameraY = 0.0f;
+float cameraZ = -3.0f;
+
 
 // The MAIN function, from here we start the application and run the game loop
 int main()
@@ -217,7 +223,7 @@ int main()
         // Create transformations
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        view = glm::translate(view, glm::vec3(cameraX, cameraY, cameraZ));
         projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
         // Get their uniform location
         GLint modelLoc = glGetUniformLocation(ourShader.Program, "model");
@@ -235,7 +241,7 @@ int main()
         {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
-            GLfloat angle = 20.0f * (i+1);
+            GLfloat angle = 20.0f * (i + 1);
             model = glm::rotate(model, (GLfloat)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
@@ -260,4 +266,28 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+    // use keyboard to control view matrix -> obejcts positions
+    // use 'w' and 's' to move objects forward and backward (in z axis)
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cameraZ += 0.1f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cameraZ -= 0.1f;
+    }
+    // use 'a' and 'd' to move objects left and right (in x axis)
+    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        cameraX += 0.1f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        cameraX -= 0.1f;
+    }
+    // use 'up' and 'down' to move objects up and down (in y axis)
+    else if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+    {
+        cameraY += 0.1f;
+    }
+    else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+    {
+        cameraY -= 0.1f;
+    }
 }
