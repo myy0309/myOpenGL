@@ -15,6 +15,7 @@
 
 // Other includes
 #include "Shader.h"
+#include "Camera.h"
 
 
 // Function prototypes
@@ -29,13 +30,9 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 // Record which key is pressed
 bool keys[1024];
 // Camera
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 bool firstMouse = true;
-GLfloat yaw = -90.0f, pitch = 0.0f;
-GLfloat lastX = WIDTH/2.0, lastY = HEIGHT/2.0;
-GLfloat fov = 45.0f;
+GLfloat lastX = WIDTH / 2.0, lastY = HEIGHT / 2.0;
 // Delta time
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
@@ -143,7 +140,6 @@ int main()
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    //glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
@@ -217,6 +213,9 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Activate shader
+        ourShader.Use();
+
         // Bind Textures using texture units
         // bind texture1 to unit 0
         glActiveTexture(GL_TEXTURE0);
@@ -229,16 +228,13 @@ int main()
         // let sampler ourTexture2 to sample unit 1
         glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture2"), 1);
 
-        // Activate shader
-        ourShader.Use();
-
         // Create transformations
         // initialize transform matrix
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
         // construct transform matrix
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        projection = glm::perspective(glm::radians(fov), (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+        projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
         // Get their uniform location
         GLint modelLoc = glGetUniformLocation(ourShader.Program, "model");
         GLint viewLoc = glGetUniformLocation(ourShader.Program, "view");
@@ -283,63 +279,35 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         lastY = ypos;
         firstMouse = false;
     }
-
     GLfloat xoffset = xpos - lastX;
-    GLfloat yoffset = lastY - ypos;
+    GLfloat yoffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to left
     lastX = xpos;
     lastY = ypos;
-
-    GLfloat sensitivity = 0.05;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(front);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 // Use mouse scroll to zoom in and zoom out
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    fov -= (float)yoffset;
-    if (fov < 1.0f)
-        fov = 1.0f;
-    if (fov > 45.0f)
-        fov = 45.0f;
+    camera.ProcessMouseScroll(yoffset);
 }
 
 // Decide what to do after specific keys are pressed 
 void do_movement()
 {
-    // cameraSpeed controls how much the camera moves when a key is pressed
-    GLfloat cameraSpeed = 0.005f;
-    // 'W' and 'S' move camera forward and backward
+    // Camera controls
     if (keys[GLFW_KEY_W])
-        // z coord of cam actually decreases, cam moves nearer to objects
-        cameraPos += cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if (keys[GLFW_KEY_S])
-        // z coord of cam actually increases, cam moves far away from objects
-        cameraPos -= cameraSpeed * cameraFront;
-    // 'A' and 'D' move camera left and right
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (keys[GLFW_KEY_A])
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if (keys[GLFW_KEY_D])
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    // 'R' and 'F' move camera up and down
+        camera.ProcessKeyboard(RIGHT, deltaTime);
     if (keys[GLFW_KEY_R])
-        cameraPos += glm::normalize(glm::cross(cameraFront, glm::vec3(1, 0, 0))) * cameraSpeed;
+        camera.ProcessKeyboard(UP, deltaTime);
     if (keys[GLFW_KEY_F])
-        cameraPos -= glm::normalize(glm::cross(cameraFront, glm::vec3(1, 0, 0))) * cameraSpeed;
+        camera.ProcessKeyboard(DOWN, deltaTime);
 }
 
 // Is called whenever a key is pressed/released via GLFW
