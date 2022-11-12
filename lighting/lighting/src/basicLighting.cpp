@@ -191,6 +191,7 @@ int main()
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
         // Pass light information to vertex shader so that we can calculate the lighting conditions
         GLint objectColorLoc = glGetUniformLocation(ourShader.Program, "objectColor");
         GLint lightColorLoc = glGetUniformLocation(ourShader.Program, "lightColor");
@@ -200,6 +201,25 @@ int main()
         glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // set light color to white
         glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // use camera position as viewer position
+        
+        // Pass material information to shader
+        GLint matAmbientLoc = glGetUniformLocation(ourShader.Program, "material.ambient");
+        GLint matDiffuseLoc = glGetUniformLocation(ourShader.Program, "material.diffuse");
+        GLint matSpecularLoc = glGetUniformLocation(ourShader.Program, "material.specular");
+        GLint matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
+        glUniform3f(matAmbientLoc, 1.0f, 0.5f, 0.31f); // same as object color
+        glUniform3f(matDiffuseLoc, 1.0f, 0.5f, 0.31f); // same as object color
+        glUniform3f(matSpecularLoc, 0.5f, 0.5f, 0.5f);
+        glUniform1f(matShineLoc, 32.0f);
+
+        // Pass light information to shader
+        GLint lightAmbientLoc = glGetUniformLocation(ourShader.Program, "light.ambient");
+        GLint lightDiffuseLoc = glGetUniformLocation(ourShader.Program, "light.diffuse");
+        GLint lightSpecularLoc = glGetUniformLocation(ourShader.Program, "light.specular");
+        glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
+        glUniform3f(lightDiffuseLoc, 0.5f, 0.5f, 0.5f);// darken diffuse light a bit so that it looks more natural
+        glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
+
         // Draw object
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
