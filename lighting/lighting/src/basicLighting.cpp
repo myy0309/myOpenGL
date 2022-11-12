@@ -168,6 +168,10 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Make the light obritting around object
+        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+        lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+
         // Activate object shader
         ourShader.Use();
 
@@ -191,9 +195,11 @@ int main()
         GLint objectColorLoc = glGetUniformLocation(ourShader.Program, "objectColor");
         GLint lightColorLoc = glGetUniformLocation(ourShader.Program, "lightColor");
         GLint lightPosLoc = glGetUniformLocation(ourShader.Program, "lightPos");
-        glUniform3f(objectColorLoc, 1.0f, 0.0f, 0.31f); // set object color to coral red
+        GLint viewPosLoc = glGetUniformLocation(ourShader.Program, "viewPos");
+        glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f); // set object color to coral red
         glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // set light color to white
         glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // use camera position as viewer position
         // Draw object
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -222,6 +228,7 @@ int main()
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
+        glfwPollEvents();
     }
     // Properly de-allocate all resources once they've outlived their purpose
     glDeleteVertexArrays(1, &VAO);
