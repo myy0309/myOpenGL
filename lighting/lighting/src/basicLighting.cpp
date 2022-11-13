@@ -81,47 +81,48 @@ int main()
 
     // Set up vertex data (and buffer(s)) and attribute pointers
     float vertices[] = {
-     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-      0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-      0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-     -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        // positions          // normals           // texture coords
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
-     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-      0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-      0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-      0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
 
-     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-     -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-     -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-      0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-      0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-      0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-      0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-      0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-     -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-     -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
 
-     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-      0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-     -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
     };
 
     GLuint VBO, VAO, lightVAO;
@@ -134,11 +135,14 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     
     // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
     // Normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
+    // diffuse texture attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
     glBindVertexArray(0); // Unbind VAO
 
     glBindVertexArray(lightVAO);
@@ -146,9 +150,48 @@ int main()
     // Since the object's VBO's data already contains the data, no need to buffer data
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // set the vertex attribute 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0); // Unbind VAO
+
+    // Load and create a texture 
+    GLuint diffuseMap;
+    GLuint specularMap;
+    // ====================
+    // diffuse map
+    // ====================
+    glGenTextures(1, &diffuseMap);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap); // All upcoming GL_TEXTURE_2D operations now have effect on our texture object
+    // Set our texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// Set texture wrapping to GL_REPEAT
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Set texture filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // Load, create texture and generate mipmaps
+    int width, height;
+    unsigned char* image = SOIL_load_image("..\\res\\textures\\container2.png", &width, &height, 0, SOIL_LOAD_RGB);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    SOIL_free_image_data(image);
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+    // ====================
+    // specular map
+    // ====================
+    glGenTextures(1, &specularMap);
+    glBindTexture(GL_TEXTURE_2D, specularMap); // All upcoming GL_TEXTURE_2D operations now have effect on our texture object
+    // Set our texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// Set texture wrapping to GL_REPEAT
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Set texture filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // Load, create texture and generate mipmaps
+    image = SOIL_load_image("..\\res\\textures\\container2_specular.png", &width, &height, 0, SOIL_LOAD_RGB);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    SOIL_free_image_data(image);
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
 
 
     // Game loop
@@ -203,14 +246,16 @@ int main()
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // use camera position as viewer position
         
         // Pass material information to shader
-        GLint matAmbientLoc = glGetUniformLocation(ourShader.Program, "material.ambient");
-        GLint matDiffuseLoc = glGetUniformLocation(ourShader.Program, "material.diffuse");
-        GLint matSpecularLoc = glGetUniformLocation(ourShader.Program, "material.specular");
         GLint matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
-        glUniform3f(matAmbientLoc, 1.0f, 0.5f, 0.31f); // same as object color
-        glUniform3f(matDiffuseLoc, 1.0f, 0.5f, 0.31f); // same as object color
-        glUniform3f(matSpecularLoc, 0.5f, 0.5f, 0.5f);
         glUniform1f(matShineLoc, 32.0f);
+        // Pass diffuse map information to fragment shader
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), 0);
+        // Pass specular map information to fragment shader
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), 1);
 
         // Pass light information to shader
         GLint lightAmbientLoc = glGetUniformLocation(ourShader.Program, "light.ambient");
