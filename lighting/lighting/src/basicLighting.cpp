@@ -157,6 +157,7 @@ int main()
     // Load and create a texture 
     GLuint diffuseMap;
     GLuint specularMap;
+    GLuint emissionMap;
     // ====================
     // diffuse map
     // ====================
@@ -192,6 +193,24 @@ int main()
     glGenerateMipmap(GL_TEXTURE_2D);
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+    // ====================
+    // emssion map
+    // ====================
+    glGenTextures(1, &emissionMap);
+    glBindTexture(GL_TEXTURE_2D, emissionMap); // All upcoming GL_TEXTURE_2D operations now have effect on our texture object
+    // Set our texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// Set texture wrapping to GL_REPEAT
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Set texture filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // Load, create texture and generate mipmaps
+    image = SOIL_load_image("..\\res\\textures\\matrix.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    SOIL_free_image_data(image);
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+
 
 
     // Game loop
@@ -236,34 +255,29 @@ int main()
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
         // Pass light information to vertex shader so that we can calculate the lighting conditions
-        GLint objectColorLoc = glGetUniformLocation(ourShader.Program, "objectColor");
-        GLint lightColorLoc = glGetUniformLocation(ourShader.Program, "lightColor");
-        GLint lightPosLoc = glGetUniformLocation(ourShader.Program, "lightPos");
-        GLint viewPosLoc = glGetUniformLocation(ourShader.Program, "viewPos");
-        glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f); // set object color to coral red
-        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // set light color to white
-        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // use camera position as viewer position
-        
-        // Pass material information to shader
-        GLint matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
-        glUniform1f(matShineLoc, 32.0f);
-        // Pass diffuse map information to fragment shader
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), 0);
-        // Pass specular map information to fragment shader
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
-        glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), 1);
-
-        // Pass light information to shader
+        GLint lightPosLoc = glGetUniformLocation(ourShader.Program, "light.position");
+        GLint viewPosLoc = glGetUniformLocation(ourShader.Program, "viewPos");        
         GLint lightAmbientLoc = glGetUniformLocation(ourShader.Program, "light.ambient");
         GLint lightDiffuseLoc = glGetUniformLocation(ourShader.Program, "light.diffuse");
         GLint lightSpecularLoc = glGetUniformLocation(ourShader.Program, "light.specular");
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // use camera position as viewer position
         glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
         glUniform3f(lightDiffuseLoc, 0.5f, 0.5f, 0.5f);// darken diffuse light a bit so that it looks more natural
         glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
+
+        // Pass material information to shader
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, emissionMap);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), 0);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), 1);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.emission"), 2);
+        GLint matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
+        glUniform1f(matShineLoc, 32.0f);      
 
         // Draw object
         glBindVertexArray(VAO);
