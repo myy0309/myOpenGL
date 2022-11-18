@@ -74,7 +74,6 @@ int main()
 
     // Build and compile our shader program
     Shader ourShader(".\\src\\shaders\\VertexShader.vs", ".\\src\\shaders\\FragmentShader.frag");
-    // note that our current working dir is Projectglfw, not src
 
 
     // Set up vertex data (and buffer(s)) and attribute pointers
