@@ -21,12 +21,11 @@
 #include "stb_image.h"
 
 
-#pragma region Function prototypes
+// Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void do_movement();
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-#pragma endregion
 
 // Global variables
 // Window dimensions
