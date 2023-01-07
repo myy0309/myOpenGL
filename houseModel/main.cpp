@@ -222,8 +222,8 @@ int main()
 #pragma endregion
     Model woodChair(".\\Debug\\tableAndChair\\seat.obj");
     Model woodTable(".\\Debug\\tableAndChair\\table.obj"); 
-    Model sideTable(".\\Debug\\sideTable\\Liam_Side_Table_by_Minotti.obj");
-    Model leatherSofa(".\\Debug\\leatherSofa\\export\\Armchair_Monti_156__corona.obj"); 
+    //Model sideTable(".\\Debug\\sideTable\\Liam_Side_Table_by_Minotti.obj");
+    //Model leatherSofa(".\\Debug\\leatherSofa\\export\\Armchair_Monti_156__corona.obj"); 
     Model bed(".\\Debug\\simpleBed\\file.obj");
     Model bigWindow(".\\Debug\\Window\\window_big.obj");
     Model kitchenSet(".\\Debug\\kitchenSet8\\file.obj");
@@ -238,6 +238,12 @@ int main()
     Model tvBox(".\\Debug\\ykq\\obj.obj");
     Model hangShelf(".\\Debug\\hangShelf\\file.obj");
     Model freezer(".\\Debug\\rifrig\\file.obj");
+    Model woodCabin(".\\Debug\\bedTable\\file.obj");
+    Model wardrobe(".\\Debug\\wardrobe\\file.obj");
+    Model desk(".\\Debug\\desk\\file.obj");
+    Model deskChair(".\\Debug\\deskChair\\file.obj");
+    Model computer(".\\Debug\\computer\\file.obj");
+    Model longue(".\\Debug\\sunChair\\file.obj");
 
 #pragma region Init and Load Models to VAO, VBO
     GLuint VBO, floorVBO, VAO, floorVAO, lightVAO;
@@ -397,30 +403,30 @@ int main()
         // Draw object
         woodChair.Draw(&ourShader);
 
-#pragma region Prepare Model, View, Proj Matrix for sofa
-        // Create transformations
-        // initialize transform matrix
-        model = glm::mat4(1.0f);
-        // construct transform matrix
-        model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
-        model = glm::translate(model, glm::vec3(-3.3, -1.0, 1.5));
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-#pragma endregion
-        // Draw object
-        sideTable.Draw(&ourShader);
+//#pragma region Prepare Model, View, Proj Matrix for sofa
+//        // Create transformations
+//        // initialize transform matrix
+//        model = glm::mat4(1.0f);
+//        // construct transform matrix
+//        model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
+//        model = glm::translate(model, glm::vec3(-3.3, -1.0, 1.5));
+//        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+//#pragma endregion
+//        // Draw object
+//        sideTable.Draw(&ourShader);
 
-#pragma region Prepare Model, View, Proj Matrix for single sofa
-        // Create transformations
-        // initialize transform matrix
-        model = glm::mat4(1.0f);
-        // construct transform matrix
-        model = glm::scale(model, glm::vec3(0.005, 0.005, 0.005));
-        model = glm::translate(model, glm::vec3(-320.0, -100.5, 250.0));
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-#pragma endregion
-        // Draw object
-        leatherSofa.Draw(&ourShader);
+//#pragma region Prepare Model, View, Proj Matrix for single sofa
+//        // Create transformations
+//        // initialize transform matrix
+//        model = glm::mat4(1.0f);
+//        // construct transform matrix
+//        model = glm::scale(model, glm::vec3(0.005, 0.005, 0.005));
+//        model = glm::translate(model, glm::vec3(-320.0, -100.5, 250.0));
+//        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+//        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+//#pragma endregion
+//        // Draw object
+//        leatherSofa.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for bed
         // Create transformations
@@ -428,7 +434,8 @@ int main()
         model = glm::mat4(1.0f);
         // construct transform matrix
         model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
-        model = glm::translate(model, glm::vec3(-5500.0, -800.5, 900.0));
+        model = glm::translate(model, glm::vec3(-5200.0, -750.0, 50.0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
         // Draw object
@@ -561,7 +568,7 @@ int main()
         // Draw object clothShelf
         tv.Draw(&ourShader);
 
-#pragma region Prepare Model, View, Proj Matrix for television
+#pragma region Prepare Model, View, Proj Matrix for television controller
         // Create transformations
         // initialize transform matrix
         model = glm::mat4(1.0f);
@@ -586,7 +593,7 @@ int main()
         // Draw object clothShelf
         hangShelf.Draw(&ourShader);
 
-#pragma region Prepare Model, View, Proj Matrix for hang shelf
+#pragma region Prepare Model, View, Proj Matrix for refrigirator
         // Create transformations
         // initialize transform matrix
         model = glm::mat4(1.0f);
@@ -598,6 +605,82 @@ int main()
 #pragma endregion
         // Draw object clothShelf
         freezer.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for bedside table
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.002, 0.002, 0.002));
+        model = glm::translate(model, glm::vec3(-2050.0, -250.0, 430.0));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object clothShelf
+        woodCabin.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for wardrobe
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
+        model = glm::translate(model, glm::vec3(-6500.0, -1000.0, 2800.0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object clothShelf
+        wardrobe.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for desk
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
+        model = glm::translate(model, glm::vec3(-2800.0, -700.0, 1800.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object clothShelf
+        desk.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for desk chair
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.00007, 0.00007, 0.00007));
+        model = glm::translate(model, glm::vec3(-28000.0, -7000.0, 10000.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object clothShelf
+        deskChair.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for computer
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
+        model = glm::translate(model, glm::vec3(-2000.0, 55.0, 1200.0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object clothShelf
+        computer.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for longue
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
+        model = glm::translate(model, glm::vec3(-5000.0, -750.0, -1400.0));
+        model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object clothShelf
+        longue.Draw(&ourShader);
 
         // Activate light shader
         lightShader.Use();
