@@ -37,10 +37,8 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 
 // Positions of point lights
 glm::vec3 pointLightPositions[] = {
-    glm::vec3(0.7f,  0.2f,  2.0f),
-    glm::vec3(1.0f, 1.0f, 0.0f),
-    glm::vec3(-0.5f,  1.0f, 0.0f),
-    glm::vec3(0.0f,  0.0f, -3.0f)
+    glm::vec3(1.0f, 0.4f, -1.2f), // lamp in the living room
+    glm::vec3(-4.0f, 0.3f, 1.3f), // lamp in the bed room
 };
 
 #pragma region Camera Declare
@@ -54,13 +52,9 @@ GLfloat lastFrame = 0.0f;  	// Time of last frame
 bool keys[1024];
 #pragma endregion
 #pragma region Light Declare
-//LightDirectional directionalLight = LightDirectional(glm::vec3(-0.2f, -1.0f, -0.3f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f));
-//LightDirectional directionalLight = LightDirectional(glm::vec3(0.2f, 1.0f, -0.3f), 0.05f, 0.4f, 0.5f);
 LightDirectional directionalLight = LightDirectional(glm::vec3(0.2f, 1.0f, -0.3f), 0.5f, 0.4f, 0.5f);
-LightPoint pointLight1 = LightPoint(glm::vec3(0.7f, 0.2f, 2.0f), 0.05f, 0.8f, 1.0f);
-LightPoint pointLight2 = LightPoint(glm::vec3(2.3f, -3.3f, -4.0f), 0.05f, 0.8f, 1.0f);
-LightPoint pointLight3 = LightPoint(glm::vec3(-4.0f, 2.0f, -12.0f), 0.05f, 0.8f, 1.0f);
-LightPoint pointLight4 = LightPoint(glm::vec3(0.0f, 0.0f, -3.0f), 0.05f, 0.8f, 1.0f);
+LightPoint pointLight1 = LightPoint(pointLightPositions[0], 0.05f, 0.8f, 1.0f);
+LightPoint pointLight2 = LightPoint(pointLightPositions[1], 0.05f, 0.8f, 1.0f);
 #pragma endregion
 
 // The MAIN function, from here we start the application and run the game loop
@@ -101,11 +95,10 @@ int main()
     // Setup OpenGL options
     glEnable(GL_DEPTH_TEST); // enable depth buffer
 #pragma endregion
-
 #pragma region Init Shader Program
     // Build and compile our shader program
     Shader ourShader(".\\src\\shaders\\VertexShader.vs", ".\\src\\shaders\\FragmentShader.frag");
-    Shader lightShader(".\\src\\shaders\\lightVertexShader.vs", ".\\src\\shaders\\lightFragmentShader.frag");
+    /*Shader lightShader(".\\src\\shaders\\lightVertexShader.vs", ".\\src\\shaders\\lightFragmentShader.frag");*/
 #pragma endregion
 
 #pragma region Init Material for house structure
@@ -125,6 +118,7 @@ int main()
     float x = 2.2; // length of the house
     float z = 0.8; // width of the house
     float y = 0.25; // height of the house
+    float delta = 0.2;
     float bedroomDoorPos = -0.3;
     float frontDoorPos = 0.15;
     float diningDoorPos = 0.06;
@@ -135,80 +129,80 @@ int main()
         // back face
         -x, -y, -z,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
          x, -y, -z,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-         x,  y, -z,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-         x,  y, -z,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-        -x,  y, -z,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+         x,  y + delta, -z,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+         x,  y + delta, -z,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+        -x,  y + delta, -z,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
         -x, -y, -z,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
         // front face
         -x, -y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
          x * frontDoorPos, -y,  z,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
-         x * frontDoorPos,  y,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         x * frontDoorPos,  y,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-        -x,  y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
+         x * frontDoorPos,  y + delta,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         x * frontDoorPos,  y + delta,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+        -x,  y + delta,  z,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
         -x, -y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
 
          x * frontDoorPos + widthOfDoor, -y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
          x, -y,  z,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
-         x,  y,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         x,  y,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         x * frontDoorPos + widthOfDoor,  y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
+         x,  y + delta,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         x,  y + delta,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         x * frontDoorPos + widthOfDoor,  y + delta,  z,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
          x * frontDoorPos + widthOfDoor, -y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
         // left face
-        -x,  y,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        -x,  y, -z,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -x,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x,  y + delta, -z,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
         -x, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         -x, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         -x, -y,  z,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-        -x,  y,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
         // left partition wall |
-        -x * leftWallPos,  y,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        -x * leftWallPos,  y, -z,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -x * leftWallPos,  y + delta,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x * leftWallPos,  y + delta, -z,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
         -x * leftWallPos, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         -x * leftWallPos, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         -x * leftWallPos, -y,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-        -x * leftWallPos,  y,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x * leftWallPos,  y + delta,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-        -x * leftWallPos,  y,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        -x * leftWallPos,  y,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -x * leftWallPos,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x * leftWallPos,  y + delta,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
         -x * leftWallPos, -y,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         -x * leftWallPos, -y,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         -x * leftWallPos, -y,  z,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-        -x * leftWallPos,  y,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        // right partition wall -
+        -x * leftWallPos,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        // left partition wall -
          -x, -y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
          -x * leftWallPos - widthOfDoor, -y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
-         -x * leftWallPos - widthOfDoor,  y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         -x * leftWallPos - widthOfDoor,  y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         -x,  y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
+         -x * leftWallPos - widthOfDoor,  y + delta,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         -x * leftWallPos - widthOfDoor,  y + delta,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         -x,  y + delta,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
          -x, -y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
         // right partition wall |
-        x * rightWallPos,  y,  z* diningDoorPos,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        x * rightWallPos,  y, -z,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        x * rightWallPos,  y + delta,  z* diningDoorPos,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        x * rightWallPos,  y + delta, -z,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
         x * rightWallPos, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         x * rightWallPos, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         x * rightWallPos, -y,  z* diningDoorPos,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-        x * rightWallPos,  y,  z* diningDoorPos,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        x * rightWallPos,  y + delta,  z* diningDoorPos,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-        x * rightWallPos,  y,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        x * rightWallPos,  y,  z* diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        x * rightWallPos,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        x * rightWallPos,  y + delta,  z* diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
         x * rightWallPos, -y,  z* diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         x * rightWallPos, -y,  z* diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
         x * rightWallPos, -y,  z,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-        x * rightWallPos,  y,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        x * rightWallPos,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
         // right partition wall -
          x, -y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-         x* rightWallPos, -y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
-         x* rightWallPos,  y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         x* rightWallPos,  y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         x,  y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
+         x* rightWallPos + widthOfDoor, -y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
+         x* rightWallPos + widthOfDoor,  y + delta,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         x* rightWallPos + widthOfDoor,  y + delta,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         x,  y + delta,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
          x, -y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
          // right face
-         x,  y,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         x,  y, -z,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+         x,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+         x,  y + delta, -z,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
          x, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
          x, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
          x, -y,  z,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-         x,  y,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+         x,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
     };
     GLfloat floorVertice[] = {
         // bottom face
@@ -220,10 +214,11 @@ int main()
         -x, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
     };
 #pragma endregion
+
+#pragma region funiture
     Model woodChair(".\\Debug\\tableAndChair\\seat.obj");
     Model woodTable(".\\Debug\\tableAndChair\\table.obj"); 
     Model sideTable(".\\Debug\\sideTable\\Liam_Side_Table_by_Minotti.obj");
-    //Model leatherSofa(".\\Debug\\leatherSofa\\export\\Armchair_Monti_156__corona.obj"); 
     Model bed(".\\Debug\\simpleBed\\file.obj");
     Model bigWindow(".\\Debug\\Window\\window_big.obj");
     Model kitchenSet(".\\Debug\\kitchenSet8\\file.obj");
@@ -237,7 +232,6 @@ int main()
     Model wardrobe(".\\Debug\\wardrobe2\\file.obj");
     Model tv(".\\Debug\\tv\\obj.obj");
     Model tvBox(".\\Debug\\ykq\\obj.obj");
-    //Model hangShelf(".\\Debug\\hangShelf\\file.obj");
     Model freezer(".\\Debug\\rifrig\\file.obj");
     Model woodCabin(".\\Debug\\bedTable\\file.obj");
     Model desk(".\\Debug\\desk\\file.obj");
@@ -249,16 +243,17 @@ int main()
     Model drawing(".\\Debug\\draw\\file.obj");
     Model bottleSet(".\\Debug\\bottleSet\\file.obj");
     Model cupAndPlates(".\\Debug\\cupAndPlates\\file.obj");
-    /*Model sauce(".\\Debug\\sauce\\file.obj");*/
     Model towel(".\\Debug\\towel\\file.obj");
     Model shampoo(".\\Debug\\shampoo\\file.obj");
+    Model floorLamp(".\\Debug\\floorLamp\\file.obj");
+#pragma endregion
 
 #pragma region Init and Load Models to VAO, VBO
-    GLuint VBO, floorVBO, VAO, floorVAO, lightVAO;
+    GLuint VBO, floorVBO, VAO, floorVAO/*, lightVAO*/;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &floorVBO);
-    glGenVertexArrays(1, &lightVAO);
+    //glGenVertexArrays(1, &lightVAO);
     glGenVertexArrays(1, &floorVAO);
 
     glBindVertexArray(VAO);
@@ -275,14 +270,14 @@ int main()
     glEnableVertexAttribArray(2);
     glBindVertexArray(0); // Unbind VAO
 
-    glBindVertexArray(lightVAO);
-    // we only need to bind to the VBO
-    // Since the object's VBO's data already contains the data, no need to buffer data
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // set the vertex attribute 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0); // Unbind VAO
+    //glBindVertexArray(lightVAO);
+    //// we only need to bind to the VBO
+    //// Since the object's VBO's data already contains the data, no need to buffer data
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //// set the vertex attribute 
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+    //glEnableVertexAttribArray(0);
+    //glBindVertexArray(0); // Unbind VAO
 
     glBindVertexArray(floorVAO);
     glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
@@ -325,11 +320,9 @@ int main()
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
         // Directional light
         feedLightDir(&ourShader, directionalLight);
-        // Point light 1, 2, 3, 4
+        // Point light 1, 2
         feedLightPoint(&ourShader, pointLight1, "0");
         feedLightPoint(&ourShader, pointLight2, "1");
-        feedLightPoint(&ourShader, pointLight3, "2");
-        feedLightPoint(&ourShader, pointLight4, "3");
 #pragma endregion
 
 #pragma region Prepare Model, View, Proj Matrix of house structure
@@ -387,6 +380,7 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
+#pragma region draw furniture 
 #pragma region Prepare Model, View, Proj Matrix for wood table
         // Create transformations
         // initialize transform matrix
@@ -423,19 +417,6 @@ int main()
 #pragma endregion
         // Draw object
         sideTable.Draw(&ourShader);
-
-//#pragma region Prepare Model, View, Proj Matrix for single sofa
-//        // Create transformations
-//        // initialize transform matrix
-//        model = glm::mat4(1.0f);
-//        // construct transform matrix
-//        model = glm::scale(model, glm::vec3(0.005, 0.005, 0.005));
-//        model = glm::translate(model, glm::vec3(-320.0, -100.5, 250.0));
-//        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
-//        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-//#pragma endregion
-//        // Draw object
-//        leatherSofa.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for bed
         // Create transformations
@@ -548,7 +529,7 @@ int main()
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         clothShelf.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for hang shelf
@@ -561,7 +542,7 @@ int main()
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         bookShelf.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for television
@@ -574,7 +555,7 @@ int main()
         model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         tv.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for television controller
@@ -586,7 +567,7 @@ int main()
         model = glm::translate(model, glm::vec3(0.0, -55000.0, 10000.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         tvBox.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for refrigirator
@@ -599,7 +580,7 @@ int main()
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         freezer.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for bedside table
@@ -612,7 +593,7 @@ int main()
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         woodCabin.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for wardrobe
@@ -625,7 +606,7 @@ int main()
         model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         wardrobe.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for desk
@@ -637,7 +618,7 @@ int main()
         model = glm::translate(model, glm::vec3(-2800.0, -700.0, 1800.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         desk.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for desk chair
@@ -649,7 +630,7 @@ int main()
         model = glm::translate(model, glm::vec3(-28000.0, -7000.0, 10000.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         deskChair.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for computer
@@ -662,7 +643,7 @@ int main()
         model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         computer.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for longue
@@ -675,7 +656,7 @@ int main()
         model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
-        // Draw object clothShelf
+        // Draw object
         longue.Draw(&ourShader);
 
 #pragma region Prepare Model, View, Proj Matrix for teddy bear
@@ -709,7 +690,7 @@ int main()
         model = glm::mat4(1.0f);
         // construct transform matrix
         model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
-        model = glm::translate(model, glm::vec3(2190.0, 350.0, -600.0));
+        model = glm::translate(model, glm::vec3(2190.0, 600.0, -600.0));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
         model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0, 0.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -741,25 +722,13 @@ int main()
         // Draw object
         cupAndPlates.Draw(&ourShader);
 
-//#pragma region Prepare Model, View, Proj Matrix for sauce bottles
-//        // Create transformations
-//        // initialize transform matrix
-//        model = glm::mat4(1.0f);
-//        // construct transform matrix
-//        model = glm::scale(model, glm::vec3(0.03, 0.03, 0.03));
-//        model = glm::translate(model, glm::vec3(100.0, 0.0, -15.0));
-//        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-//#pragma endregion
-//        // Draw object
-//        sauce.Draw(&ourShader);
-
 #pragma region Prepare Model, View, Proj Matrix for towel
         // Create transformations
         // initialize transform matrix
         model = glm::mat4(1.0f);
         // construct transform matrix
         model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
-        model = glm::translate(model, glm::vec3(8800.0, -200.0, 1500.0));
+        model = glm::translate(model, glm::vec3(8800.0, -150.0, 1500.0));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 #pragma endregion
@@ -778,38 +747,51 @@ int main()
         // Draw object
         shampoo.Draw(&ourShader);
 
-        // Activate light shader
-        lightShader.Use();
-#pragma region Prepare Model, View, Proj Matrix for point light
-        // Create transformations for light
-        GLuint lightModelLoc = glGetUniformLocation(lightShader.Program, "model");
-        GLuint lightViewLoc = glGetUniformLocation(lightShader.Program, "view");
-        GLuint lightProjLoc = glGetUniformLocation(lightShader.Program, "projection");
-        glm::mat4 lightView = glm::mat4(1.0f);
-        glm::mat4 lightProjection = glm::mat4(1.0f);
-        lightView = camera.GetViewMatrix();
-        lightProjection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
-        // Pass them to the shaders
-        glUniformMatrix4fv(lightViewLoc, 1, GL_FALSE, glm::value_ptr(lightView));
-        glUniformMatrix4fv(lightProjLoc, 1, GL_FALSE, glm::value_ptr(lightProjection));
+#pragma region Prepare Model, View, Proj Matrix for floor lamp
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.015, 0.015, 0.015));
+        model = glm::translate(model, glm::vec3(-270.0, -32.0, 90.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
         // Draw object
-        glBindVertexArray(lightVAO);
-        for (GLuint i = 0; i < sizeof(pointLightPositions) / sizeof(pointLightPositions[0]); i++)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, pointLightPositions[i]);
-            model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-            glUniformMatrix4fv(lightModelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            //glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        glBindVertexArray(0);
+        floorLamp.Draw(&ourShader);
+#pragma endregion
+
+        // Activate light shader
+        //lightShader.Use();
+#pragma region Prepare Model, View, Proj Matrix for point light
+        //// Create transformations for light
+        //GLuint lightModelLoc = glGetUniformLocation(lightShader.Program, "model");
+        //GLuint lightViewLoc = glGetUniformLocation(lightShader.Program, "view");
+        //GLuint lightProjLoc = glGetUniformLocation(lightShader.Program, "projection");
+        //glm::mat4 lightView = glm::mat4(1.0f);
+        //glm::mat4 lightProjection = glm::mat4(1.0f);
+        //lightView = camera.GetViewMatrix();
+        //lightProjection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+        //// Pass them to the shaders
+        //glUniformMatrix4fv(lightViewLoc, 1, GL_FALSE, glm::value_ptr(lightView));
+        //glUniformMatrix4fv(lightProjLoc, 1, GL_FALSE, glm::value_ptr(lightProjection));
+        //// Draw object
+        //glBindVertexArray(lightVAO);
+        //for (GLuint i = 0; i < sizeof(pointLightPositions) / sizeof(pointLightPositions[0]); i++)
+        //{
+        //    glm::mat4 model = glm::mat4(1.0f);
+        //    model = glm::translate(model, pointLightPositions[i]);
+        //    model = glm::scale(model, glm::vec3(0.15f)); // Make it a smaller cube
+        //    glUniformMatrix4fv(lightModelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        //    glDrawArrays(GL_TRIANGLES, 0, 36);
+        //}
+        //glBindVertexArray(0);
 #pragma endregion
         // Swap the screen buffers
         glfwSwapBuffers(window);
     }
     // Properly de-allocate all resources once they've outlived their purpose
     glDeleteVertexArrays(1, &VAO);
-    glDeleteVertexArrays(1, &lightVAO);
+    /*glDeleteVertexArrays(1, &lightVAO);*/
     glDeleteBuffers(1, &VBO);
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
@@ -904,10 +886,10 @@ void feedLightPoint(Shader* shader, LightPoint pointLight, std::string lightNum)
     std::string nameConstant = name + std::string("].constant");
     std::string nameLinear = name + std::string("].linear");
     std::string nameQuadratic = name + std::string("].quadratic");
-    glUniform3f(glGetUniformLocation(shader->Program, namePos.c_str()), pointLight.position.x, pointLight1.position.y, pointLight1.position.z);
-    glUniform3f(glGetUniformLocation(shader->Program, nameAmbient.c_str()), pointLight.ambient.x, pointLight1.ambient.y, pointLight1.ambient.z);
-    glUniform3f(glGetUniformLocation(shader->Program, nameDiffuse.c_str()), pointLight.diffuse.x, pointLight1.diffuse.y, pointLight1.diffuse.z);
-    glUniform3f(glGetUniformLocation(shader->Program, nameSpecular.c_str()), pointLight.specular.x, pointLight1.specular.y, pointLight1.specular.z);
+    glUniform3f(glGetUniformLocation(shader->Program, namePos.c_str()), pointLight.position.x, pointLight.position.y, pointLight.position.z);
+    glUniform3f(glGetUniformLocation(shader->Program, nameAmbient.c_str()), pointLight.ambient.x, pointLight.ambient.y, pointLight.ambient.z);
+    glUniform3f(glGetUniformLocation(shader->Program, nameDiffuse.c_str()), pointLight.diffuse.x, pointLight.diffuse.y, pointLight.diffuse.z);
+    glUniform3f(glGetUniformLocation(shader->Program, nameSpecular.c_str()), pointLight.specular.x, pointLight.specular.y, pointLight.specular.z);
     glUniform1f(glGetUniformLocation(shader->Program, nameConstant.c_str()), pointLight.constant);
     glUniform1f(glGetUniformLocation(shader->Program, nameLinear.c_str()), pointLight.linear);
     glUniform1f(glGetUniformLocation(shader->Program, nameQuadratic.c_str()), pointLight.quadratic);
