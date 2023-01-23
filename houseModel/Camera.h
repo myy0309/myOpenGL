@@ -2,9 +2,10 @@
 
 // Std. Includes
 #include <vector>
+#include <algorithm>
 
 // GL Includes
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -27,7 +28,6 @@ const GLfloat SPEED = 3.0f;
 const GLfloat SENSITIVTY = 0.25f;
 const GLfloat ZOOM = 45.0f;
 const GLfloat zoomScaler = 0.1f;
-
 
 // An abstract camera class that processes input and calculates the corresponding Eular Angles, Vectors and Matrices for use in OpenGL
 class Camera
@@ -76,18 +76,36 @@ public:
     void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
     {
         GLfloat velocity = this->MovementSpeed * deltaTime;
+        verifyForward();
+        verifyRight();
         if (direction == FORWARD)
+        {
             this->Position += this->Front * velocity;
+            std::cout << "z+=" << this->Position.z << std::endl;
+        }
         if (direction == BACKWARD)
+        {
             this->Position -= this->Front * velocity;
+            std::cout << "z-=" << this->Position.z << std::endl;
+        }
         if (direction == LEFT)
+        {
             this->Position -= this->Right * velocity;
+            std::cout << "x left=" << this->Position.x << std::endl;
+        }
         if (direction == RIGHT)
+        {
             this->Position += this->Right * velocity;
-        if (direction == UP)
+            std::cout << "x right=" << this->Position.x << std::endl;
+        }
+        /*if (direction == UP)
             this->Position += (glm::cross(this->Front, glm::vec3(1, 0, 0))) * velocity;
         if (direction == DOWN)
-            this->Position -= (glm::cross(this->Front, glm::vec3(1, 0, 0))) * velocity;
+            this->Position -= (glm::cross(this->Front, glm::vec3(1, 0, 0))) * velocity;*/
+        if (direction == UP)
+            this->Position += (glm::cross(this->Front, this->Right)) * velocity;
+        if (direction == DOWN)
+            this->Position -= (glm::cross(this->Front, this->Right)) * velocity;
     }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -136,5 +154,43 @@ private:
         // Also re-calculate the Right and Up vector
         this->Right = glm::normalize(glm::cross(this->Front, this->WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         this->Up = glm::normalize(glm::cross(this->Right, this->Front));
+    }
+
+    void verifyForward()
+    {
+        this->Position.z = clamp(this->Position.z, -1.3f, 1.4f);
+    }
+
+    void verifyRight()
+    {
+        // living room
+        if (this->Position.x > -2.7f && this->Position.x < 2.2f)
+        {
+            // bedroom door
+            if ( (this->Position.x < 0) && (this->Position.z > 0.2f || this->Position.z < -0.4f))
+            {
+                this->Position.x = clamp(this->Position.x, -1.15f, 2.0f);
+            }
+            // kitchen door
+            if ( (this->Position.x > 0) && this->Position.z > 0.75f || this->Position.z < 0.0f)
+            {
+                this->Position.x = clamp(this->Position.x, -1.15f, 2.0f);
+            }
+            return;
+        }
+        this->Position.x = clamp(this->Position.x, -4.2f, 4.2f);
+    }
+
+    float clamp(float value, float min, float max)
+    {
+        if (value < min)
+        {
+            value = min;
+        }
+        if (value > max)
+        {
+            value = max;
+        }
+        return value;
     }
 };
