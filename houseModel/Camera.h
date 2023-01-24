@@ -164,20 +164,64 @@ private:
     void verifyRight()
     {
         // living room
-        if (this->Position.x > -2.7f && this->Position.x < 2.2f)
+        if (this->Position.x > -1.2f && this->Position.x < 2.2f)
         {
-            // bedroom door
-            if ( (this->Position.x < 0) && (this->Position.z > 0.2f || this->Position.z < -0.4f))
+            // left door
+            if ( (this->Position.x < 0) && (this->Position.z > 0.15f || this->Position.z < -0.7f))
             {
-                this->Position.x = clamp(this->Position.x, -1.15f, 2.0f);
+                this->Position.x = clamp(this->Position.x, -1.1f, 4.2f);
             }
-            // kitchen door
+            // right door
             if ( (this->Position.x > 0) && this->Position.z > 0.75f || this->Position.z < 0.0f)
             {
-                this->Position.x = clamp(this->Position.x, -1.15f, 2.0f);
+                this->Position.x = clamp(this->Position.x, -4.2f, 2.0f);
             }
-            return;
+            this->Position.z = clamp(this->Position.z, -1.3f, 1.0f);
         }
+        // left part
+        if (this->Position.x > -4.3f && this->Position.x < -1.2f)
+        {
+            // door
+            if (this->Position.z > 0.15f || this->Position.z < -0.7f)
+            {
+                this->Position.x = clamp(this->Position.x, -4.2f, -1.5f);
+            }
+            // bedroom
+            if (this->Position.z > -0.6f && this->Position.z < 1.4f && this->Position.x < -1.94f)
+            {
+                this->Position.z = clamp(this->Position.z, -0.35f, 1.1f);
+                this->Position.x = clamp(this->Position.x, -3.7f, -1.5f);
+            }
+            // balcony
+            if (this->Position.z < -0.6f && this->Position.z > -1.3f && this->Position.x < -1.94f)
+            {
+                this->Position.z = clamp(this->Position.z, -1.3f, -0.75f);
+            }
+        }
+        // right part
+        if (this->Position.x > 2.2f && this->Position.x < 4.3f)
+        {
+            //door
+            if (this->Position.z > 0.75f || this->Position.z < 0.0f)
+            {
+                this->Position.x = clamp(this->Position.x, 2.4f, 4.2f);
+            }
+            // bathroom
+            if (this->Position.z > 0.43f && this->Position.z < 1.4f && this->Position.x > 2.7f)
+            {
+                this->Position.z = clamp(this->Position.z, 0.55f, 1.4f);
+            }
+            // kitchen
+            if (this->Position.z < 0.43f && this->Position.z > -1.3f && this->Position.x > 2.7f)
+            {
+                this->Position.z = clamp(this->Position.z, -1.12f, 0.25f);
+                if (this->Position.z > -0.23)
+                {
+                    this->Position.x = clamp(this->Position.x, 2.2f, 3.63f);
+                }
+            }
+        }
+
         this->Position.x = clamp(this->Position.x, -4.2f, 4.2f);
     }
 
