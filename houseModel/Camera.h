@@ -76,7 +76,6 @@ public:
     void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
     {
         GLfloat velocity = this->MovementSpeed * deltaTime;
-        verifyForward();
         verifyRight();
         if (direction == FORWARD)
         {
@@ -156,15 +155,10 @@ private:
         this->Up = glm::normalize(glm::cross(this->Right, this->Front));
     }
 
-    void verifyForward()
-    {
-        this->Position.z = clamp(this->Position.z, -1.3f, 1.4f);
-    }
-
     void verifyRight()
     {
         // living room
-        if (this->Position.x > -1.2f && this->Position.x < 2.2f)
+        if (this->Position.x > -1.2f && this->Position.x < 2.2f && this->Position.z < 1.4f && this->Position.z > -1.3f)
         {
             // left door
             if ( (this->Position.x < 0) && (this->Position.z > 0.15f || this->Position.z < -0.7f))
@@ -176,10 +170,14 @@ private:
             {
                 this->Position.x = clamp(this->Position.x, -4.2f, 2.0f);
             }
-            this->Position.z = clamp(this->Position.z, -1.3f, 1.0f);
+            // gate
+            if (this->Position.x < 0.5f || this->Position.x > 1.25f)
+            {
+                this->Position.z = clamp(this->Position.z, -1.3f, 1.0f);
+            }
         }
         // left part
-        if (this->Position.x > -4.3f && this->Position.x < -1.2f)
+        if (this->Position.x > -4.3f && this->Position.x < -1.2f && this->Position.z < 1.4f && this->Position.z > -1.3f)
         {
             // door
             if (this->Position.z > 0.15f || this->Position.z < -0.7f)
@@ -196,10 +194,14 @@ private:
             if (this->Position.z < -0.6f && this->Position.z > -1.3f && this->Position.x < -1.94f)
             {
                 this->Position.z = clamp(this->Position.z, -1.3f, -0.75f);
+                this->Position.x = clamp(this->Position.x, -3.7f, -1.5f);
             }
+
+            this->Position.z = clamp(this->Position.z, -1.3f, 1.4f);
+           // this->Position.x = clamp(this->Position.x, -4.2f, 4.2f);
         }
         // right part
-        if (this->Position.x > 2.2f && this->Position.x < 4.3f)
+        if (this->Position.x > 2.2f && this->Position.x < 4.3f && this->Position.z < 1.4f && this->Position.z > -1.3f)
         {
             //door
             if (this->Position.z > 0.75f || this->Position.z < 0.0f)
@@ -210,19 +212,48 @@ private:
             if (this->Position.z > 0.43f && this->Position.z < 1.4f && this->Position.x > 2.7f)
             {
                 this->Position.z = clamp(this->Position.z, 0.55f, 1.4f);
+                this->Position.x = clamp(this->Position.x, 2.3f, 4.1f);
             }
             // kitchen
             if (this->Position.z < 0.43f && this->Position.z > -1.3f && this->Position.x > 2.7f)
             {
                 this->Position.z = clamp(this->Position.z, -1.12f, 0.25f);
+                this->Position.x = clamp(this->Position.x, 2.3f, 4.1f);
                 if (this->Position.z > -0.23)
                 {
                     this->Position.x = clamp(this->Position.x, 2.2f, 3.63f);
                 }
             }
-        }
 
-        this->Position.x = clamp(this->Position.x, -4.2f, 4.2f);
+            this->Position.z = clamp(this->Position.z, -1.3f, 1.4f);
+            //this->Position.x = clamp(this->Position.x, -4.2f, 4.2f);
+        }
+        // outside
+        // left
+        if (this->Position.x < - 4.2f && this->Position.z < 1.4f && this->Position.z > -1.3f)
+        {
+            this->Position.x = clamp(this->Position.x, -100.0f, -4.65f);
+        }
+        // right
+        if (this->Position.x > 4.2f && this->Position.z < 1.4f && this->Position.z > -1.3f)
+        {
+            this->Position.x = clamp(this->Position.x, 4.65f, 100.0f);
+        }
+        // front
+        if (this->Position.z > 1.4f && this->Position.x < 4.2f && this->Position.x > -4.2f)
+        {
+            // gate
+            if (this->Position.x < 0.5f || this->Position.x > 1.25f)
+            {
+                this->Position.z = clamp(this->Position.z, 1.75f, 100.0f);
+            }
+        }
+        // back
+        if (this->Position.z < -1.3f && this->Position.x < 4.2f && this->Position.x > -4.2f)
+        {
+            this->Position.z = clamp(this->Position.z, -100.0f, -1.75f);
+        }
+        
     }
 
     float clamp(float value, float min, float max)
