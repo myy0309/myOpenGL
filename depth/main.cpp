@@ -185,8 +185,8 @@ int main()
     // -------------
     std::string floorPath = "..\\res\\textures\\metal.png";
     std::string cubePath = "..\\res\\textures\\container.jpg";
-    unsigned int cubeTexture = loadTexture(floorPath.c_str());
-    unsigned int floorTexture = loadTexture(cubePath.c_str());
+    unsigned int cubeTexture = loadTexture(cubePath.c_str());
+    unsigned int floorTexture = loadTexture(floorPath.c_str());
 
     // shader configuration
     // --------------------
