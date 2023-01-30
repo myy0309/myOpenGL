@@ -36,6 +36,7 @@ unsigned int loadImageToGPU(const char* filename, GLuint internalFormat, GLenum 
 unsigned int loadTexture(char const* path);
 void feedLightPoint(Shader* shader, LightPoint pointLight, std::string lightNum);
 void feedLightDir(Shader* shader, LightDirectional directionalLight);
+unsigned int loadCubemap(std::vector<const GLchar*> faces);
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
 
@@ -46,7 +47,8 @@ glm::vec3 pointLightPositions[] = {
 };
 
 #pragma region Camera Declare
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+//Camera camera(glm::vec3(0.0f, 0.0f, 6.0f));
+Camera camera(glm::vec3(0.5f, 0.0f, 1.5f));
 bool firstMouse = true;
 GLfloat lastX = WIDTH / 2.0, lastY = HEIGHT / 2.0;
 // Delta time
@@ -113,25 +115,32 @@ int main()
     // Build and compile our shader program
     Shader ourShader(".\\src\\shaders\\VertexShader.vs", ".\\src\\shaders\\FragmentShader.frag");
     Shader windowShader(".\\src\\shaders\\windowVertexShader.vs", ".\\src\\shaders\\windowFragmentShader.frag");
+    Shader skyboxShader(".\\src\\shaders\\skybox.vert", ".\\src\\shaders\\skybox.frag");
     /*Shader lightShader(".\\src\\shaders\\lightVertexShader.vs", ".\\src\\shaders\\lightFragmentShader.frag");*/
 #pragma endregion
 
 #pragma region Init Material for house structure
     Material* myMaterial = new Material(&ourShader,
-        /*loadImageToGPU("..\\res\\textures\\roughWall3.jpg", GL_RGB, GL_RGB, ourShader.DIFFUSE),
-        loadImageToGPU("..\\res\\textures\\roughWall_gray.jpg", GL_RGB, GL_RGB, ourShader.SPECULAR),*/
-        loadTexture("..\\res\\textures\\roughWall3.jpg"),
-        loadTexture("..\\res\\textures\\roughWall_gray.jpg"),
+        loadImageToGPU("..\\res\\textures\\roughWall2.jpg", GL_RGB, GL_RGB, ourShader.DIFFUSE),
+        loadImageToGPU("..\\res\\textures\\roughWall_gray2.jpg", GL_RGB, GL_RGB, ourShader.SPECULAR),
         32.0f
     );
-    Material* floorMaterial = new Material(&ourShader,
-        /*loadImageToGPU("..\\res\\textures\\wood_floor_big.jpg", GL_RGB, GL_RGB, ourShader.DIFFUSE),
-        loadImageToGPU("..\\res\\textures\\wood_floor_spec_big.jpg", GL_RGB, GL_RGB, ourShader.SPECULAR),*/
-        loadTexture("..\\res\\textures\\wood_floor_big.jpg"),
-        loadTexture("..\\res\\textures\\wood_floor_spec_big.jpg"),
+    Material* woodFloorMaterial = new Material(&ourShader,
+        loadImageToGPU("..\\res\\textures\\wood_floor_big.jpg", GL_RGB, GL_RGB, ourShader.DIFFUSE),
+        loadImageToGPU("..\\res\\textures\\wood_floor_spec_big.jpg", GL_RGB, GL_RGB, ourShader.SPECULAR),
         32.0f
     );
-    /*std::string windowPath = "..\\res\\textures\\transparentglass.png";*/
+    Material* tileFloorMaterial = new Material(&ourShader,
+        loadImageToGPU("..\\res\\textures\\011923501147_0istockphoto.jpg", GL_RGB, GL_RGB, ourShader.DIFFUSE),
+        loadImageToGPU("..\\res\\textures\\011923501147_0istockphoto.jpg", GL_RGB, GL_RGB, ourShader.SPECULAR),
+        32.0f
+    );
+    Material* roofMaterial = new Material(&ourShader,
+        loadImageToGPU("..\\res\\textures\\roofSquare1.jpg", GL_RGB, GL_RGB, ourShader.DIFFUSE),
+        loadImageToGPU("..\\res\\textures\\roofSquare1.jpg", GL_RGB, GL_RGB, ourShader.SPECULAR),
+        32.0f
+    );
+
     std::string windowPath = "..\\res\\textures\\thickerthanwateranovel.png";
     unsigned int windowTexture = loadTexture(windowPath.c_str());
 #pragma endregion
@@ -226,14 +235,23 @@ int main()
          x, -y,  z,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
          x,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
     };
-    GLfloat floorVertice[] = {
+    GLfloat woodFloorVertice[] = {
         // bottom face
         -x, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-         x, -y, -z,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-         x, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-         x, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+         x* rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+         x* rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+         x* rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
         -x, -y,  z,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
         -x, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+    };
+    GLfloat tileFloorVertice[] = {
+        // bottom face
+        x* rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+        x, -y, -z,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+        x, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+        x, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+        x* rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+        x* rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
     };
     GLfloat windowVertice[] = {
         // left part of back face
@@ -244,21 +262,86 @@ int main()
         -x,  y - 0.1, -z,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f,
         -x, -y, -z,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
     };
-    /*std::vector<glm::vec3> windows
-    {
-        glm::vec3(-1.5f, 0.0f, -0.48f),
-        glm::vec3(1.5f, 0.0f, 0.51f),
-        glm::vec3(0.0f, 0.0f, 0.7f),
-        glm::vec3(-0.3f, 0.0f, -2.3f),
-        glm::vec3(0.5f, 0.0f, -0.6f)
-    };*/
+
+    float roofHeight = 0.7f;
+    y = y + delta;
+    x = x + 0.1f;
+    z = z + 0.1f;
+    GLfloat roofVertice[] = {
+        // front
+        -x,  y,  z,  0.0,  z / (z + roofHeight),  roofHeight / (z + roofHeight),  0.0f,  0.0f,
+         x,  y,  z,  0.0,  z / (z + roofHeight),  roofHeight / (z + roofHeight),  1.0f,  0.0f,
+         0.0, y + roofHeight, 0.0,  0.0,  z / (z + roofHeight),  roofHeight / (z + roofHeight),  0.5f,  1.0f,
+
+        // right
+         x,  y,  z,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.0f,  0.0f,
+         x,  y, -z,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  1.0f,  0.0f,
+         0.0, y + roofHeight, 0.0,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.5f,  1.0f,
+
+        // back
+         x,  y, -z,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  0.0f,  0.0f,
+        -x,  y, -z,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  1.0f,  0.0f,
+         0.0, y + roofHeight, 0.0,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  0.5f,  1.0f,
+
+        //// left
+        -x,  y, -z,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.0f,  0.0f,
+        -x,  y,  z,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  1.0f,  0.0f,
+         0.0, y + roofHeight, 0.0,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.5f,  1.0f,
+    };
+
+    float skyX = 50.0f;
+    float skyY = 50.0f;
+    float skyZ = 50.0f;
+    GLfloat skyboxVertices[] = {
+        // Positions          
+        -skyX,  skyY, -skyZ,
+        -skyX, -skyY, -skyZ,
+         skyX, -skyY, -skyZ,
+         skyX, -skyY, -skyZ,
+         skyX,  skyY, -skyZ,
+        -skyX,  skyY, -skyZ,
+
+        -skyX, -skyY,  skyZ,
+        -skyX, -skyY, -skyZ,
+        -skyX,  skyY, -skyZ,
+        -skyX,  skyY, -skyZ,
+        -skyX,  skyY,  skyZ,
+        -skyX, -skyY,  skyZ,
+
+         skyX, -skyY, -skyZ,
+         skyX, -skyY,  skyZ,
+         skyX,  skyY,  skyZ,
+         skyX,  skyY,  skyZ,
+         skyX,  skyY, -skyZ,
+         skyX, -skyY, -skyZ,
+
+        -skyX, -skyY,  skyZ,
+        -skyX,  skyY,  skyZ,
+         skyX,  skyY,  skyZ,
+         skyX,  skyY,  skyZ,
+         skyX, -skyY,  skyZ,
+        -skyX, -skyY,  skyZ,
+
+        -skyX,  skyY, -skyZ,
+         skyX,  skyY, -skyZ,
+         skyX,  skyY,  skyZ,
+         skyX,  skyY,  skyZ,
+        -skyX,  skyY,  skyZ,
+        -skyX,  skyY, -skyZ,
+
+        -skyX, -skyY, -skyZ,
+        -skyX, -skyY,  skyZ,
+         skyX, -skyY, -skyZ,
+         skyX, -skyY, -skyZ,
+        -skyX, -skyY,  skyZ,
+         skyX, -skyY,  skyZ
+    };
 #pragma endregion
 //#pragma region funiture
 //    Model woodChair(".\\Debug\\tableAndChair\\seat.obj");
 //    Model woodTable(".\\Debug\\tableAndChair\\table.obj"); 
 //    Model sideTable(".\\Debug\\sideTable\\Liam_Side_Table_by_Minotti.obj");
 //    Model bed(".\\Debug\\simpleBed\\file.obj");
-//    /*Model bigWindow(".\\Debug\\Window\\window_big.obj");*/
 //    Model kitchenSet(".\\Debug\\kitchenSet8\\file.obj");
 //    Model washBasin(".\\Debug\\washBasin\\file.obj");
 //    Model toilet(".\\Debug\\toilet\\obj.obj");
@@ -287,14 +370,36 @@ int main()
 //#pragma endregion
 
 #pragma region Init and Load Models to VAO, VBO
-    GLuint VBO, floorVBO, VAO, floorVAO, windowVAO, windowVBO/*, lightVAO*/;
+    unsigned int VBO, VAO;
+    unsigned int woodFloorVBO, woodFloorVAO;
+    unsigned int tileFloorVBO, tileFloorVAO;
+    unsigned int windowVAO, windowVBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &floorVBO);
+    glGenBuffers(1, &woodFloorVBO);
     //glGenVertexArrays(1, &lightVAO);
-    glGenVertexArrays(1, &floorVAO);
+    glGenVertexArrays(1, &woodFloorVAO);
+    glGenVertexArrays(1, &tileFloorVAO);
+    glGenBuffers(1, &tileFloorVBO);
     glGenVertexArrays(1, &windowVAO);
     glGenBuffers(1, &windowVBO);
+
+    unsigned int roofVAO, roofVBO;
+    glGenVertexArrays(1, &roofVAO);
+    glGenBuffers(1, &roofVBO);
+    glBindVertexArray(roofVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, roofVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(roofVertice), roofVertice, GL_STATIC_DRAW);
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    // Normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+    // diffuse texture attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
+    glBindVertexArray(0); // Unbind VAO
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -319,9 +424,23 @@ int main()
     //glEnableVertexAttribArray(0);
     //glBindVertexArray(0); // Unbind VAO
 
-    glBindVertexArray(floorVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertice), floorVertice, GL_STATIC_DRAW);
+    glBindVertexArray(woodFloorVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, woodFloorVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(woodFloorVertice), woodFloorVertice, GL_STATIC_DRAW);
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    // Normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+    // diffuse texture attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
+    glBindVertexArray(0); // Unbind VAO
+
+    glBindVertexArray(tileFloorVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, tileFloorVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(tileFloorVertice), tileFloorVertice, GL_STATIC_DRAW);
     // Position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
@@ -346,19 +465,34 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
     glEnableVertexAttribArray(2);
     glBindVertexArray(0); // Unbind VAO
-    
-    /*glGenVertexArrays(1, &(windowVAO));
-    glGenBuffers(1, &(windowVBO));
-    glBindVertexArray((windowVAO));
-    glBindBuffer(GL_ARRAY_BUFFER, (windowVAO));
-    glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertice), &(windowVertice), GL_STATIC_DRAW);
+
+    // Setup skybox VAO
+    GLuint skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glBindVertexArray(0);*/
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glBindVertexArray(0);
 #pragma endregion
 
+    // Cubemap (Skybox)
+    std::vector<const GLchar*> faces;
+    faces.push_back("..\\res\\textures\\winter\\Backyard\\posxFlip.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Backyard\\negxFlip.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Backyard\\posy.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Backyard\\negy.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Backyard\\negzFlip.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Backyard\\poszFlip.jpg"); 
+    /*faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\posxFlip.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\negxFlip.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\posy.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\negy.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\negzFlip.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\poszFlip.jpg");*/
+    unsigned int cubemapTexture = loadCubemap(faces);
 
     // Game loop
     while (!glfwWindowShouldClose(window))
@@ -372,19 +506,10 @@ int main()
         glfwPollEvents();
         do_movement();
 
-        //// sort the transparent windows before rendering
-        //// ---------------------------------------------
-        //std::map<float, glm::vec3> sorted;
-        //for (unsigned int i = 0; i < windows.size(); i++)
-        //{
-        //    float distance = glm::length(camera.Position - windows[i]);
-        //    sorted[distance] = windows[i];
-        //}
-
         // Render
         // Clear the colorbuffer
-        //glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Activate shader
@@ -400,13 +525,41 @@ int main()
         feedLightPoint(&ourShader, pointLight2, "1");
 #pragma endregion
 
-#pragma region Prepare Model, View, Proj Matrix of house structure
         // Create transformations
         // initialize transform matrix
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
+#pragma region Draw Skybox
+        // Draw skybox last
+        //glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        glDepthMask(GL_FALSE);
+        skyboxShader.Use();
+        //model = glm::scale(model, glm::vec3(0.0, 0.5, 0.0));
+        //model = glm::translate(model, glm::vec3(0.0, 8, 0.0));
+        projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+        //view = glm::mat4(glm::mat3(camera.GetViewMatrix()));	// Remove any translation component of the view matrix
+        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "skybox"), 0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthMask(GL_TRUE);
+       // glDepthFunc(GL_LESS); // set depth function back to default
+#pragma endregion
+
+#pragma region Prepare Model, View, Proj Matrix of house structure
         // construct transform matrix
+        ourShader.Use();
+        model = glm::mat4(1.0f);
+        view = glm::mat4(1.0f);
+        projection = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2, 2, 2));
         // construct transform matrix
         view = camera.GetViewMatrix();
@@ -420,6 +573,7 @@ int main()
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));  
 #pragma endregion
+
 #pragma region Load Textures for house structure
         // Pass material information to shader
         GLint matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
@@ -441,48 +595,58 @@ int main()
 #pragma region Load Textures for house floor
         // Pass material information to shader
         matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
-        glUniform1f(matShineLoc, floorMaterial->shininess);
+        glUniform1f(matShineLoc, woodFloorMaterial->shininess);
         // Pass diffuse map information to fragment shader
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, floorMaterial->diffuse);
+        glBindTexture(GL_TEXTURE_2D, woodFloorMaterial->diffuse);
         glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), ourShader.DIFFUSE);
         // Pass specular map information to fragment shader
         glActiveTexture(GL_TEXTURE0 + 1);
-        glBindTexture(GL_TEXTURE_2D, floorMaterial->specular);
+        glBindTexture(GL_TEXTURE_2D, woodFloorMaterial->specular);
         glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), ourShader.SPECULAR);
 #pragma endregion
         // Draw floor
-        glBindVertexArray(floorVAO);
+        glBindVertexArray(woodFloorVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
-
-        windowShader.Use();
-        //model = glm::mat4(1.0f);
-        GLint windowModelLoc = glGetUniformLocation(windowShader.Program, "model");
-        GLint windowViewLoc = glGetUniformLocation(windowShader.Program, "view");
-        GLint windowProjLoc = glGetUniformLocation(windowShader.Program, "projection");
-        glUniformMatrix4fv(windowModelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(windowViewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(windowProjLoc, 1, GL_FALSE, glm::value_ptr(projection));
-#pragma region Load Textures for house window
-        // Draw window
-        glUniform1i(glGetUniformLocation(windowShader.Program, "texture1"), 0);
-        glBindVertexArray(windowVAO);
+#pragma region Load Textures for house floor
+        // Pass material information to shader
+        matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
+        glUniform1f(matShineLoc, tileFloorMaterial->shininess);
+        // Pass diffuse map information to fragment shader
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, windowTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        /*for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            glUniformMatrix4fv(windowModelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }*/
-        glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, tileFloorMaterial->diffuse);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), ourShader.DIFFUSE);
+        // Pass specular map information to fragment shader
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_2D, tileFloorMaterial->specular);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), ourShader.SPECULAR);
 #pragma endregion
+        // Draw floor
+        glBindVertexArray(tileFloorVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 
-#pragma region draw furniture 
+#pragma region Load Textures for roof
+        // Pass material information to shader
+        matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
+        glUniform1f(matShineLoc, roofMaterial->shininess);
+        // Pass diffuse map information to fragment shader
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, roofMaterial->diffuse);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), ourShader.DIFFUSE);
+        // Pass specular map information to fragment shader
+        glActiveTexture(GL_TEXTURE0 + 1);
+        glBindTexture(GL_TEXTURE_2D, roofMaterial->specular);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), ourShader.SPECULAR);
+#pragma endregion
+        // Draw roof
+        glBindVertexArray(roofVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 24);
+        glBindVertexArray(0);
+
+//#pragma region draw furniture 
 //#pragma region Prepare Model, View, Proj Matrix for wood table
 //        // Create transformations
 //        // initialize transform matrix
@@ -532,19 +696,6 @@ int main()
 //#pragma endregion
 //        // Draw object
 //        bed.Draw(&ourShader);
-//
-////#pragma region Prepare Model, View, Proj Matrix for window
-////        // Create transformations
-////        // initialize transform matrix
-////        model = glm::mat4(1.0f);
-////        // construct transform matrix
-////        model = glm::scale(model, glm::vec3(0.61, 0.5, 0.5));
-////        model = glm::translate(model, glm::vec3(-4.7, -1.0, -3.2));
-////        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-////        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-////#pragma endregion
-////        // Draw object
-////        bigWindow.Draw(&ourShader);
 //
 //#pragma region Prepare Model, View, Proj Matrix for kitchen set
 //        // Create transformations
@@ -830,7 +981,7 @@ int main()
 //        model = glm::mat4(1.0f);
 //        // construct transform matrix
 //        model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
-//        model = glm::translate(model, glm::vec3(8800.0, -150.0, 1500.0));
+//        model = glm::translate(model, glm::vec3(8700.0, -150.0, 1500.0));
 //        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
 //        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 //#pragma endregion
@@ -860,6 +1011,48 @@ int main()
 //#pragma endregion
 //        // Draw object
 //        floorLamp.Draw(&ourShader);
+//#pragma endregion
+
+//#pragma region Draw Skybox
+//        // Draw skybox last
+//        //glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+//        skyboxShader.Use();
+//        model = glm::mat4(1.0f);
+//        model = glm::scale(model, glm::vec3(1000.0, 1000.0, 1000.0));
+//        model = glm::translate(model, glm::vec3(0.0, 20.0, 0.0));
+//        view = camera.GetViewMatrix();
+//        //view = glm::mat4(glm::mat3(camera.GetViewMatrix()));	// Remove any translation component of the view matrix
+//        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+//        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+//        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+//        // skybox cube
+//        glBindVertexArray(skyboxVAO);
+//        glActiveTexture(GL_TEXTURE0);
+//        glUniform1i(glGetUniformLocation(ourShader.Program, "skybox"), 0);
+//        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+//        glDrawArrays(GL_TRIANGLES, 0, 36);
+//        glBindVertexArray(0);
+//        glDepthFunc(GL_LESS); // set depth function back to default
+//#pragma endregion
+
+#pragma region Draw house window
+        windowShader.Use();
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(2, 2, 2));
+        view = camera.GetViewMatrix();
+        GLint windowModelLoc = glGetUniformLocation(windowShader.Program, "model");
+        GLint windowViewLoc = glGetUniformLocation(windowShader.Program, "view");
+        GLint windowProjLoc = glGetUniformLocation(windowShader.Program, "projection");
+        glUniformMatrix4fv(windowModelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(windowViewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(windowProjLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        // Draw window
+        glUniform1i(glGetUniformLocation(windowShader.Program, "texture1"), 0);
+        glBindVertexArray(windowVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, windowTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 #pragma endregion
 
         // Activate light shader
@@ -894,8 +1087,10 @@ int main()
     // Properly de-allocate all resources once they've outlived their purpose
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &floorVAO);
-    glDeleteBuffers(1, &floorVBO);
+    glDeleteVertexArrays(1, &woodFloorVAO);
+    glDeleteBuffers(1, &woodFloorVBO);
+    glDeleteVertexArrays(1, &tileFloorVAO);
+    glDeleteBuffers(1, &tileFloorVBO);
     glDeleteVertexArrays(1, &windowVAO);
     glDeleteBuffers(1, &windowVBO);
     // Terminate GLFW, clearing any resources allocated by GLFW.
@@ -1043,4 +1238,40 @@ void feedLightDir(Shader* shader, LightDirectional directionalLight)
     glUniform3f(glGetUniformLocation(shader->Program, "dirLight.ambient"), directionalLight.ambient.x, directionalLight.ambient.y, directionalLight.ambient.z);
     glUniform3f(glGetUniformLocation(shader->Program, "dirLight.diffuse"), directionalLight.diffuse.x, directionalLight.diffuse.y, directionalLight.diffuse.z);
     glUniform3f(glGetUniformLocation(shader->Program, "dirLight.specular"), directionalLight.specular.x, directionalLight.specular.y, directionalLight.specular.z);
+}
+
+// Loads a cubemap texture from 6 individual texture faces
+// Order should be:
+// +X (right)
+// -X (left)
+// +Y (top)
+// -Y (bottom)
+// +Z (front) 
+// -Z (back)
+unsigned int loadCubemap(std::vector<const GLchar*> faces)
+{
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glActiveTexture(GL_TEXTURE0);
+
+    int width, height;
+    unsigned char* image;
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    for (GLuint i = 0; i < faces.size(); i++)
+    {
+        image = SOIL_load_image(faces[i], &width, &height, 0, SOIL_LOAD_RGB);
+        glTexImage2D(
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+            GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image
+        );
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    return textureID;
 }
