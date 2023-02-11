@@ -98,13 +98,9 @@ public:
             std::cout << "x right=" << this->Position.x << std::endl;
         }
         /*if (direction == UP)
-            this->Position += (glm::cross(this->Front, glm::vec3(1, 0, 0))) * velocity;
-        if (direction == DOWN)
-            this->Position -= (glm::cross(this->Front, glm::vec3(1, 0, 0))) * velocity;*/
-        if (direction == UP)
             this->Position += (glm::cross(this->Front, this->Right)) * velocity;
         if (direction == DOWN)
-            this->Position -= (glm::cross(this->Front, this->Right)) * velocity;
+            this->Position -= (glm::cross(this->Front, this->Right)) * velocity;*/
     }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -158,7 +154,7 @@ private:
     void verifyRight()
     {
         // living room
-        if (this->Position.x > -1.2f && this->Position.x < 2.2f && this->Position.z < 1.4f && this->Position.z > -1.3f)
+        if (this->Position.x > -1.2f && this->Position.x < 2.2f && this->Position.z < 1.4f && this->Position.z > -0.9f)
         {
             // left door
             if ( (this->Position.x < 0) && (this->Position.z > 0.15f || this->Position.z < -0.7f))
@@ -173,11 +169,11 @@ private:
             // gate
             if (this->Position.x < 0.5f || this->Position.x > 1.25f)
             {
-                this->Position.z = clamp(this->Position.z, -1.3f, 1.0f);
+                this->Position.z = clamp(this->Position.z, -1.0f, 1.0f);
             }
         }
         // left part
-        if (this->Position.x > -4.3f && this->Position.x < -1.2f && this->Position.z < 1.4f && this->Position.z > -1.3f)
+        if (this->Position.x > -4.3f && this->Position.x < -1.2f && this->Position.z < 1.4f && this->Position.z > -0.9f)
         {
             // door
             if (this->Position.z > 0.15f || this->Position.z < -0.7f)
@@ -193,12 +189,9 @@ private:
             // balcony
             if (this->Position.z < -0.6f && this->Position.z > -1.3f && this->Position.x < -1.94f)
             {
-                this->Position.z = clamp(this->Position.z, -1.3f, -0.75f);
+                this->Position.z = clamp(this->Position.z, -0.9f, -0.75f);
                 this->Position.x = clamp(this->Position.x, -3.7f, -1.5f);
             }
-
-            this->Position.z = clamp(this->Position.z, -1.3f, 1.4f);
-           // this->Position.x = clamp(this->Position.x, -4.2f, 4.2f);
         }
         // right part
         if (this->Position.x > 2.2f && this->Position.x < 4.3f && this->Position.z < 1.4f && this->Position.z > -1.3f)
@@ -211,22 +204,19 @@ private:
             // bathroom
             if (this->Position.z > 0.43f && this->Position.z < 1.4f && this->Position.x > 2.7f)
             {
-                this->Position.z = clamp(this->Position.z, 0.55f, 1.4f);
+                this->Position.z = clamp(this->Position.z, 0.55f, 1.0f);
                 this->Position.x = clamp(this->Position.x, 2.3f, 4.1f);
             }
             // kitchen
             if (this->Position.z < 0.43f && this->Position.z > -1.3f && this->Position.x > 2.7f)
             {
-                this->Position.z = clamp(this->Position.z, -1.12f, 0.25f);
+                this->Position.z = clamp(this->Position.z, -0.9f, 0.25f);
                 this->Position.x = clamp(this->Position.x, 2.3f, 4.1f);
                 if (this->Position.z > -0.23)
                 {
                     this->Position.x = clamp(this->Position.x, 2.2f, 3.63f);
                 }
             }
-
-            this->Position.z = clamp(this->Position.z, -1.3f, 1.4f);
-            //this->Position.x = clamp(this->Position.x, -4.2f, 4.2f);
         }
         // outside
         // left
@@ -251,7 +241,7 @@ private:
         // back
         if (this->Position.z < -1.3f && this->Position.x < 4.2f && this->Position.x > -4.2f)
         {
-            this->Position.z = clamp(this->Position.z, -100.0f, -1.75f);
+            this->Position.z = clamp(this->Position.z, -100.0f, -1.8f);
         }
         
     }
