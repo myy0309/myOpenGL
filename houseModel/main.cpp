@@ -48,7 +48,7 @@ glm::vec3 pointLightPositions[] = {
 
 #pragma region Camera Declare
 //Camera camera(glm::vec3(0.0f, 0.0f, 6.0f));
-Camera camera(glm::vec3(0.5f, 1.0f, 7.5f));
+Camera camera(glm::vec3(0.5f, 0.0f, 1.5f));
 bool firstMouse = true;
 GLfloat lastX = WIDTH / 2.0, lastY = HEIGHT / 2.0;
 // Delta time
@@ -91,7 +91,7 @@ int main()
     //glewExperimental = GL_TRUE;
     //// Initialize GLEW to setup the OpenGL Function pointers
     //glewInit();
-
+    
     // glad: load all OpenGL function pointers
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -102,7 +102,7 @@ int main()
 
     // Define the viewport dimensions
     glViewport(0, 0, WIDTH, HEIGHT);
-
+    
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
     stbi_set_flip_vertically_on_load(true);
 
@@ -116,6 +116,8 @@ int main()
     Shader ourShader(".\\src\\shaders\\VertexShader.vs", ".\\src\\shaders\\FragmentShader.frag");
     Shader windowShader(".\\src\\shaders\\windowVertexShader.vs", ".\\src\\shaders\\windowFragmentShader.frag");
     Shader skyboxShader(".\\src\\shaders\\skybox.vert", ".\\src\\shaders\\skybox.frag");
+    Shader simpleDepthShader(".\\src\\shaders\\shadow_mapping_depth.vert", ".\\src\\shaders\\shadow_mapping_depth.frag");
+    Shader debugDepthQuad(".\\src\\shaders\\debug_quad.vert", ".\\src\\shaders\\debug_quad_depth.frag");
     /*Shader lightShader(".\\src\\shaders\\lightVertexShader.vs", ".\\src\\shaders\\lightFragmentShader.frag");*/
 #pragma endregion
 
@@ -140,11 +142,6 @@ int main()
         loadImageToGPU("..\\res\\textures\\roofSquare1.jpg", GL_RGB, GL_RGB, ourShader.SPECULAR),
         32.0f
     );
-    Material* frontDoorMaterial = new Material(&ourShader,
-        loadImageToGPU("..\\res\\textures\\door.jpg", GL_RGB, GL_RGB, ourShader.DIFFUSE),
-        loadImageToGPU("..\\res\\textures\\door.jpg", GL_RGB, GL_RGB, ourShader.SPECULAR),
-        32.0f
-    );
 
     std::string windowPath = "..\\res\\textures\\thickerthanwateranovel.png";
     unsigned int windowTexture = loadTexture(windowPath.c_str());
@@ -158,7 +155,7 @@ int main()
     float bedroomDoorPos = -0.3;
     float frontDoorPos = 0.15;
     float diningDoorPos = 0.06;
-    float leftWallPos = 0.3;
+    float leftWallPos = 0.3; 
     float rightWallPos = 0.5;
     float widthOfDoor = 0.3;
     GLfloat vertices[] = {
@@ -183,88 +180,80 @@ int main()
          x,  y + delta,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
          x * frontDoorPos + widthOfDoor,  y + delta,  z,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
          x * frontDoorPos + widthOfDoor, -y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-         // left face
-         -x,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         -x,  y + delta, -z,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-         -x, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         -x, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         -x, -y,  z,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-         -x,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         // left partition wall |
-         -x * leftWallPos,  y + delta,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         -x * leftWallPos,  y + delta, -z,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-         -x * leftWallPos, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         -x * leftWallPos, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         -x * leftWallPos, -y,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-         -x * leftWallPos,  y + delta,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        // left face
+        -x,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x,  y + delta, -z,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -x, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -x, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -x, -y,  z,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        -x,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        // left partition wall |
+        -x * leftWallPos,  y + delta,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x * leftWallPos,  y + delta, -z,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -x * leftWallPos, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -x * leftWallPos, -y, -z,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -x * leftWallPos, -y,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        -x * leftWallPos,  y + delta,  z * bedroomDoorPos,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-         -x * leftWallPos,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         -x * leftWallPos,  y + delta,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-         -x * leftWallPos, -y,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         -x * leftWallPos, -y,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         -x * leftWallPos, -y,  z,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-         -x * leftWallPos,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         // left partition wall -
-          -x, -y,  z * bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-          -x * leftWallPos - widthOfDoor, -y,  z * bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
-          -x * leftWallPos - widthOfDoor,  y + delta,  z * bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-          -x * leftWallPos - widthOfDoor,  y + delta,  z * bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-          -x,  y + delta,  z * bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
-          -x, -y,  z * bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-          // right partition wall |
-          x * rightWallPos,  y + delta,  z * diningDoorPos,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-          x * rightWallPos,  y + delta, -z,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-          x * rightWallPos, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-          x * rightWallPos, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-          x * rightWallPos, -y,  z * diningDoorPos,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-          x * rightWallPos,  y + delta,  z * diningDoorPos,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x * leftWallPos,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -x * leftWallPos,  y + delta,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -x * leftWallPos, -y,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -x * leftWallPos, -y,  z * bedroomDoorPos + widthOfDoor,  -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -x * leftWallPos, -y,  z,  -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        -x * leftWallPos,  y + delta,  z,  -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        // left partition wall -
+         -x, -y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
+         -x * leftWallPos - widthOfDoor, -y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
+         -x * leftWallPos - widthOfDoor,  y + delta,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         -x * leftWallPos - widthOfDoor,  y + delta,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         -x,  y + delta,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
+         -x, -y,  z* bedroomDoorPos,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
+        // right partition wall |
+        x * rightWallPos,  y + delta,  z* diningDoorPos,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        x * rightWallPos,  y + delta, -z,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        x * rightWallPos, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        x * rightWallPos, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        x * rightWallPos, -y,  z* diningDoorPos,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        x * rightWallPos,  y + delta,  z* diningDoorPos,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-          x * rightWallPos,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-          x * rightWallPos,  y + delta,  z * diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-          x * rightWallPos, -y,  z * diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-          x * rightWallPos, -y,  z * diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-          x * rightWallPos, -y,  z,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-          x * rightWallPos,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-          // right partition wall -
-           x, -y,  z * diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-           x * rightWallPos + widthOfDoor, -y,  z * diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
-           x * rightWallPos + widthOfDoor,  y + delta,  z * diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-           x * rightWallPos + widthOfDoor,  y + delta,  z * diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-           x,  y + delta,  z * diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
-           x, -y,  z * diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-           // right face
-           x,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-           x,  y + delta, -z,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-           x, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-           x, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-           x, -y,  z,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-           x,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-    };
-    GLfloat frontDoorVertice[] = {
-         x* frontDoorPos, -y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-         x* frontDoorPos + widthOfDoor, -y,  z,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
-         x* frontDoorPos + widthOfDoor,  y + delta,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         x* frontDoorPos + widthOfDoor,  y + delta,  z,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         x* frontDoorPos,  y + delta,  z,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
-         x* frontDoorPos, -y,  z,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
+        x * rightWallPos,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        x * rightWallPos,  y + delta,  z* diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        x * rightWallPos, -y,  z* diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        x * rightWallPos, -y,  z* diningDoorPos + widthOfDoor,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        x * rightWallPos, -y,  z,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        x * rightWallPos,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        // right partition wall -
+         x, -y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
+         x* rightWallPos + widthOfDoor, -y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
+         x* rightWallPos + widthOfDoor,  y + delta,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         x* rightWallPos + widthOfDoor,  y + delta,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
+         x,  y + delta,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
+         x, -y,  z* diningDoorPos + 0.5 * widthOfDoor,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
+         // right face
+         x,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+         x,  y + delta, -z,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+         x, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+         x, -y, -z,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+         x, -y,  z,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+         x,  y + delta,  z,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
     };
     GLfloat woodFloorVertice[] = {
         // bottom face
         -x, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-         x * rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-         x * rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-         x * rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+         x* rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+         x* rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+         x* rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
         -x, -y,  z,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
         -x, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
     };
     GLfloat tileFloorVertice[] = {
         // bottom face
-        x * rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+        x* rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
         x, -y, -z,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
         x, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
         x, -y,  z,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-        x * rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-        x * rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+        x* rightWallPos, -y,  z,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+        x* rightWallPos, -y, -z,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
     };
     GLfloat windowVertice[] = {
         // left part of back face
@@ -286,20 +275,20 @@ int main()
          x,  y,  z,  0.0,  z / (z + roofHeight),  roofHeight / (z + roofHeight),  1.0f,  0.0f,
          0.0, y + roofHeight, 0.0,  0.0,  z / (z + roofHeight),  roofHeight / (z + roofHeight),  0.5f,  1.0f,
 
-         // right
-          x,  y,  z,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.0f,  0.0f,
-          x,  y, -z,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  1.0f,  0.0f,
-          0.0, y + roofHeight, 0.0,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.5f,  1.0f,
+        // right
+         x,  y,  z,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.0f,  0.0f,
+         x,  y, -z,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  1.0f,  0.0f,
+         0.0, y + roofHeight, 0.0,  roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.5f,  1.0f,
 
-          // back
-           x,  y, -z,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  0.0f,  0.0f,
-          -x,  y, -z,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  1.0f,  0.0f,
-           0.0, y + roofHeight, 0.0,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  0.5f,  1.0f,
+        // back
+         x,  y, -z,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  0.0f,  0.0f,
+        -x,  y, -z,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  1.0f,  0.0f,
+         0.0, y + roofHeight, 0.0,  0.0,  z / (z + roofHeight),  -roofHeight / (z + roofHeight),  0.5f,  1.0f,
 
-           //// left
-           -x,  y, -z,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.0f,  0.0f,
-           -x,  y,  z,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  1.0f,  0.0f,
-            0.0, y + roofHeight, 0.0,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.5f,  1.0f,
+        //// left
+        -x,  y, -z,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.0f,  0.0f,
+        -x,  y,  z,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  1.0f,  0.0f,
+         0.0, y + roofHeight, 0.0,  -roofHeight / (x + roofHeight),  x / (x + roofHeight),  0.0f,  0.5f,  1.0f,
     };
 
     float skyX = 50.0f;
@@ -352,36 +341,36 @@ int main()
 #pragma endregion
 
 #pragma region funiture
-        Model woodChair(".\\Debug\\tableAndChair\\seat.obj");
-        Model woodTable(".\\Debug\\tableAndChair\\table.obj"); 
-        Model sideTable(".\\Debug\\sideTable\\Liam_Side_Table_by_Minotti.obj");
-        Model bed(".\\Debug\\simpleBed\\file.obj");
-        Model kitchenSet(".\\Debug\\kitchenSet8\\file.obj");
-        Model washBasin(".\\Debug\\washBasin\\file.obj");
-        Model toilet(".\\Debug\\toilet\\obj.obj");
-        Model bathTube(".\\Debug\\bathTube\\obj.obj");
-        Model sofaSet(".\\Debug\\sofaSet\\file.obj");
-        Model shoeCabinet(".\\Debug\\shoeCabinet2\\file.obj");
-        Model clothShelf(".\\Debug\\clothShelf\\file.obj");
-        Model bookShelf(".\\Debug\\cab\\file.obj");
-        Model wardrobe(".\\Debug\\wardrobe2\\file.obj");
-        Model tv(".\\Debug\\tv\\obj.obj");
-        Model tvBox(".\\Debug\\ykq\\obj.obj");
-        Model freezer(".\\Debug\\rifrig\\file.obj");
-        Model woodCabin(".\\Debug\\bedTable\\file.obj");
-        Model desk(".\\Debug\\desk\\file.obj");
-        Model deskChair(".\\Debug\\deskChair\\file.obj");
-        Model computer(".\\Debug\\computer\\file.obj");
-        Model longue(".\\Debug\\sunChair\\file.obj");
-        Model teddyBear(".\\Debug\\teddyBear\\file.obj");
-        Model flowerBottle(".\\Debug\\flowerBottle\\file.obj");
-        Model drawing(".\\Debug\\draw\\file.obj");
-        Model bottleSet(".\\Debug\\bottleSet\\file.obj");
-        Model cupAndPlates(".\\Debug\\cupAndPlates\\file.obj");
-        Model towel(".\\Debug\\towel\\file.obj");
-        Model shampoo(".\\Debug\\shampoo\\file.obj");
-        Model floorLamp(".\\Debug\\floorLamp\\file.obj");
-    #pragma endregion
+    Model woodChair(".\\Debug\\tableAndChair\\seat.obj");
+    Model woodTable(".\\Debug\\tableAndChair\\table.obj"); 
+    Model sideTable(".\\Debug\\sideTable\\Liam_Side_Table_by_Minotti.obj");
+    Model bed(".\\Debug\\simpleBed\\file.obj");
+    Model kitchenSet(".\\Debug\\kitchenSet8\\file.obj");
+    Model washBasin(".\\Debug\\washBasin\\file.obj");
+    Model toilet(".\\Debug\\toilet\\obj.obj");
+    Model bathTube(".\\Debug\\bathTube\\obj.obj");
+    Model sofaSet(".\\Debug\\sofaSet\\file.obj");
+    Model shoeCabinet(".\\Debug\\shoeCabinet2\\file.obj");
+    Model clothShelf(".\\Debug\\clothShelf\\file.obj");
+    Model bookShelf(".\\Debug\\cab\\file.obj");
+    Model wardrobe(".\\Debug\\wardrobe2\\file.obj");
+    Model tv(".\\Debug\\tv\\obj.obj");
+    Model tvBox(".\\Debug\\ykq\\obj.obj");
+    Model freezer(".\\Debug\\rifrig\\file.obj");
+    Model woodCabin(".\\Debug\\bedTable\\file.obj");
+    Model desk(".\\Debug\\desk\\file.obj");
+    Model deskChair(".\\Debug\\deskChair\\file.obj");
+    Model computer(".\\Debug\\computer\\file.obj");
+    Model longue(".\\Debug\\sunChair\\file.obj");
+    Model teddyBear(".\\Debug\\teddyBear\\file.obj");
+    Model flowerBottle(".\\Debug\\flowerBottle\\file.obj");
+    Model drawing(".\\Debug\\draw\\file.obj");
+    Model bottleSet(".\\Debug\\bottleSet\\file.obj");
+    Model cupAndPlates(".\\Debug\\cupAndPlates\\file.obj");
+    Model towel(".\\Debug\\towel\\file.obj");
+    Model shampoo(".\\Debug\\shampoo\\file.obj");
+    Model floorLamp(".\\Debug\\floorLamp\\file.obj");
+#pragma endregion
 
 #pragma region Init and Load Models to VAO, VBO
     unsigned int VBO, VAO;
@@ -438,23 +427,6 @@ int main()
     //glEnableVertexAttribArray(0);
     //glBindVertexArray(0); // Unbind VAO
 
-    GLuint frontDoorVAO, frontDoorVBO;
-    glGenVertexArrays(1, &frontDoorVAO);
-    glGenBuffers(1, &frontDoorVBO);
-    glBindVertexArray(frontDoorVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, frontDoorVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(frontDoorVertice), frontDoorVertice, GL_STATIC_DRAW);
-    // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    // Normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-    // diffuse texture attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(2);
-    glBindVertexArray(0); // Unbind VAO
-
     glBindVertexArray(woodFloorVAO);
     glBindBuffer(GL_ARRAY_BUFFER, woodFloorVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(woodFloorVertice), woodFloorVertice, GL_STATIC_DRAW);
@@ -497,6 +469,29 @@ int main()
     glEnableVertexAttribArray(2);
     glBindVertexArray(0); // Unbind VAO
 
+    // Configure depth map FBO
+    const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    GLuint depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    // - Create depth texture
+    GLuint depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     // Setup skybox VAO
     GLuint skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
@@ -517,7 +512,7 @@ int main()
     faces.push_back("..\\res\\textures\\winter\\Backyard\\posy.jpg");
     faces.push_back("..\\res\\textures\\winter\\Backyard\\negy.jpg");
     faces.push_back("..\\res\\textures\\winter\\Backyard\\negzFlip.jpg");
-    faces.push_back("..\\res\\textures\\winter\\Backyard\\poszFlip.jpg");
+    faces.push_back("..\\res\\textures\\winter\\Backyard\\poszFlip.jpg"); 
     /*faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\posxFlip.jpg");
     faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\negxFlip.jpg");
     faces.push_back("..\\res\\textures\\winter\\Tantolunden5\\posy.jpg");
@@ -545,8 +540,30 @@ int main()
         //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // 1. Render depth of scene to texture (from light's perspective)
+        // - Get light projection/view matrix.
+        glm::mat4 lightProjection, lightView;
+        glm::mat4 lightSpaceMatrix;
+        GLfloat near_plane = 1.0f, far_plane = 7.5f;
+        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        //lightProjection = glm::perspective(45.0f, (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // Note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene.
+        lightView = glm::lookAt(pointLight1.position, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjection * lightView;
+        // - now render scene from light's point of view
+        simpleDepthShader.Use();
+        glUniformMatrix4fv(glGetUniformLocation(simpleDepthShader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        /*RenderScene(simpleDepthShader);*/
+        
+
         // Activate shader
-        ourShader.Use();
+        glViewport(0, 0, WIDTH, HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //ourShader.Use();
+        simpleDepthShader.Use();
 #pragma region Lighting Setting
         // Pass light information to vertex shader so that we can calculate the lighting conditions
         GLint viewPosLoc = glGetUniformLocation(ourShader.Program, "viewPos");
@@ -584,7 +601,7 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthMask(GL_TRUE);
-        // glDepthFunc(GL_LESS); // set depth function back to default
+       // glDepthFunc(GL_LESS); // set depth function back to default
 #pragma endregion
 
 #pragma region Prepare Model, View, Proj Matrix of house structure
@@ -604,7 +621,7 @@ int main()
         // Pass them to the shaders
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));  
 #pragma endregion
 
 #pragma region Load Textures for house structure
@@ -623,24 +640,6 @@ int main()
         // Draw walls
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 72);
-        glBindVertexArray(0);
-
-#pragma region Load Textures for house front door
-        // Pass material information to shader
-        matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
-        glUniform1f(matShineLoc, frontDoorMaterial->shininess);
-        // Pass diffuse map information to fragment shader
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, frontDoorMaterial->diffuse);
-        glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), ourShader.DIFFUSE);
-        // Pass specular map information to fragment shader
-        glActiveTexture(GL_TEXTURE0 + 1);
-        glBindTexture(GL_TEXTURE_2D, frontDoorMaterial->specular);
-        glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), ourShader.SPECULAR);
-#pragma endregion
-        // Draw floor
-        glBindVertexArray(frontDoorVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
 #pragma region Load Textures for house floor
@@ -698,393 +697,403 @@ int main()
         glBindVertexArray(0);
 
 #pragma region draw furniture 
-        #pragma region Prepare Model, View, Proj Matrix for wood table
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
-                model = glm::translate(model, glm::vec3(6.0, -1.0, -0.5));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                woodTable.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for wood chair
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
-                model = glm::translate(model, glm::vec3(5.3, -1.0, -0.5));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                woodChair.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for side table
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
-                model = glm::translate(model, glm::vec3(-6.0, -1.0, -1.5));
-                model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                sideTable.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for bed
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
-                model = glm::translate(model, glm::vec3(-5200.0, -750.0, 50.0));
-                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                bed.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for kitchen set
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
-                model = glm::translate(model, glm::vec3(7000.0, -1000.0, -2800.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                kitchenSet.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for wash basin
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
-                model = glm::translate(model, glm::vec3(5700.0, -700.0, 850.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                washBasin.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for toilet
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.02, 0.02, 0.02));
-                model = glm::translate(model, glm::vec3(200.0, -24.0, 67.0));
-                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                toilet.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for bath tube
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0006, 0.0006, 0.0006));
-                model = glm::translate(model, glm::vec3(5000.0, -800.0, 2100.0));
-                model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                bathTube.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for sofa in livingroom
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.02, 0.02, 0.02));
-                model = glm::translate(model, glm::vec3(7.0, -26.0, -30.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                sofaSet.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for shoe cabinet
+#pragma region Prepare Model, View, Proj Matrix for wood table
         // Create transformations
         // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0001, 0.0001, 0.0001));
-                model = glm::translate(model, glm::vec3(-4500.0, -5000.0, 14000.0));
-                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object 
-                shoeCabinet.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for coat hanger
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
-                model = glm::translate(model, glm::vec3(2500.0, -700.0, 2000.0));
-                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                clothShelf.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for hang shelf
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
-                model = glm::translate(model, glm::vec3(-1100.0, -75.0, 1200.0));
-                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                bookShelf.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for television
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
-                model = glm::translate(model, glm::vec3(-1000.0, -10.0, 2900.0));
-                model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                tv.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for television controller
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.000005, 0.000005, 0.000005));
-                model = glm::translate(model, glm::vec3(0.0, -55000.0, 10000.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                tvBox.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for refrigirator
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.007, 0.007, 0.007));
-                model = glm::translate(model, glm::vec3(580.0, -70.0, 10.0));
-                model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                freezer.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for bedside table
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.002, 0.002, 0.002));
-                model = glm::translate(model, glm::vec3(-2050.0, -250.0, 430.0));
-                model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                woodCabin.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for wardrobe
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
-                model = glm::translate(model, glm::vec3(-3100.0, -500.0, 1400.0));
-                model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                wardrobe.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for desk
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
-                model = glm::translate(model, glm::vec3(-2800.0, -700.0, 1800.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                desk.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for desk chair
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.00007, 0.00007, 0.00007));
-                model = glm::translate(model, glm::vec3(-28000.0, -7000.0, 10000.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                deskChair.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for computer
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
-                model = glm::translate(model, glm::vec3(-2000.0, 55.0, 1200.0));
-                model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                computer.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for longue
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
-                model = glm::translate(model, glm::vec3(-5000.0, -750.0, -1400.0));
-                model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                longue.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for teddy bear
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
-                model = glm::translate(model, glm::vec3(-6800.0, -340.0, 0.0));
-                model = glm::rotate(model, glm::radians(60.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                teddyBear.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for flower bottle
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
-                model = glm::translate(model, glm::vec3(-4250.0, -100.0, 700.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                flowerBottle.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for drawing
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
-                model = glm::translate(model, glm::vec3(2190.0, 600.0, -600.0));
-                model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-                model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0, 0.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                drawing.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for bottle set
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
-                model = glm::translate(model, glm::vec3(-550.0, -400.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                bottleSet.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for cup and plates
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.03, 0.03, 0.03));
-                model = glm::translate(model, glm::vec3(100.0, -2.0, -8.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                cupAndPlates.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for towel
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
-                model = glm::translate(model, glm::vec3(8700.0, -150.0, 1500.0));
-                model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                towel.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for shampoo
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.015, 0.015, 0.015));
-                model = glm::translate(model, glm::vec3(180.0, -9.5, 100.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                shampoo.Draw(&ourShader);
-        
-        #pragma region Prepare Model, View, Proj Matrix for floor lamp
-                // Create transformations
-                // initialize transform matrix
-                model = glm::mat4(1.0f);
-                // construct transform matrix
-                model = glm::scale(model, glm::vec3(0.015, 0.015, 0.015));
-                model = glm::translate(model, glm::vec3(-270.0, -32.0, 90.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        #pragma endregion
-                // Draw object
-                floorLamp.Draw(&ourShader);
-        #pragma endregion
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
+        model = glm::translate(model, glm::vec3(6.0, -1.0, -0.5));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        woodTable.Draw(&ourShader);
 
-        //#pragma region Draw Skybox
-        //        // Draw skybox last
-        //        //glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-        //        skyboxShader.Use();
-        //        model = glm::mat4(1.0f);
-        //        model = glm::scale(model, glm::vec3(1000.0, 1000.0, 1000.0));
-        //        model = glm::translate(model, glm::vec3(0.0, 20.0, 0.0));
-        //        view = camera.GetViewMatrix();
-        //        //view = glm::mat4(glm::mat3(camera.GetViewMatrix()));	// Remove any translation component of the view matrix
-        //        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        //        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        //        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        //        // skybox cube
-        //        glBindVertexArray(skyboxVAO);
-        //        glActiveTexture(GL_TEXTURE0);
-        //        glUniform1i(glGetUniformLocation(ourShader.Program, "skybox"), 0);
-        //        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        //        glDrawArrays(GL_TRIANGLES, 0, 36);
-        //        glBindVertexArray(0);
-        //        glDepthFunc(GL_LESS); // set depth function back to default
-        //#pragma endregion
+#pragma region Prepare Model, View, Proj Matrix for wood chair
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
+        model = glm::translate(model, glm::vec3(5.3, -1.0, -0.5));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        woodChair.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for side table
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
+        model = glm::translate(model, glm::vec3(-6.0, -1.0, -1.5));
+        model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        sideTable.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for bed
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
+        model = glm::translate(model, glm::vec3(-5200.0, -750.0, 50.0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        bed.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for kitchen set
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
+        model = glm::translate(model, glm::vec3(7000.0, -1000.0, -2800.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        kitchenSet.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for wash basin
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
+        model = glm::translate(model, glm::vec3(5700.0, -700.0, 850.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        washBasin.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for toilet
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.02, 0.02, 0.02));
+        model = glm::translate(model, glm::vec3(200.0, -24.0, 67.0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        toilet.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for bath tube
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0006, 0.0006, 0.0006));
+        model = glm::translate(model, glm::vec3(5000.0, -800.0, 2100.0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        bathTube.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for sofa in livingroom
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.02, 0.02, 0.02));
+        model = glm::translate(model, glm::vec3(7.0, -26.0, -30.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        sofaSet.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for shoe cabinet
+// Create transformations
+// initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0001, 0.0001, 0.0001));
+        model = glm::translate(model, glm::vec3(-4500.0, -5000.0, 14000.0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object 
+        shoeCabinet.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for coat hanger
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
+        model = glm::translate(model, glm::vec3(2500.0, -700.0, 2000.0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        clothShelf.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for hang shelf
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
+        model = glm::translate(model, glm::vec3(-1100.0, -75.0, 1200.0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        bookShelf.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for television
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
+        model = glm::translate(model, glm::vec3(-1000.0, -10.0, 2900.0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        tv.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for television controller
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.000005, 0.000005, 0.000005));
+        model = glm::translate(model, glm::vec3(0.0, -55000.0, 10000.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        tvBox.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for refrigirator
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.007, 0.007, 0.007));
+        model = glm::translate(model, glm::vec3(580.0, -70.0, 10.0));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        freezer.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for bedside table
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.002, 0.002, 0.002));
+        model = glm::translate(model, glm::vec3(-2050.0, -250.0, 430.0));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        woodCabin.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for wardrobe
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
+        model = glm::translate(model, glm::vec3(-3100.0, -500.0, 1400.0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        wardrobe.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for desk
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
+        model = glm::translate(model, glm::vec3(-2800.0, -700.0, 1800.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        desk.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for desk chair
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.00007, 0.00007, 0.00007));
+        model = glm::translate(model, glm::vec3(-28000.0, -7000.0, 10000.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        deskChair.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for computer
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
+        model = glm::translate(model, glm::vec3(-2000.0, 55.0, 1200.0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        computer.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for longue
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
+        model = glm::translate(model, glm::vec3(-5000.0, -750.0, -1400.0));
+        model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        longue.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for teddy bear
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
+        model = glm::translate(model, glm::vec3(-6800.0, -340.0, 0.0));
+        model = glm::rotate(model, glm::radians(60.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        teddyBear.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for flower bottle
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
+        model = glm::translate(model, glm::vec3(-4250.0, -100.0, 700.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        flowerBottle.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for drawing
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.001, 0.001, 0.001));
+        model = glm::translate(model, glm::vec3(2190.0, 600.0, -600.0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(1.0, 0.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        drawing.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for bottle set
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0007, 0.0007, 0.0007));
+        model = glm::translate(model, glm::vec3(-550.0, -400.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        bottleSet.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for cup and plates
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.03, 0.03, 0.03));
+        model = glm::translate(model, glm::vec3(100.0, -2.0, -8.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        cupAndPlates.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for towel
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.0005, 0.0005, 0.0005));
+        model = glm::translate(model, glm::vec3(8700.0, -150.0, 1500.0));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        towel.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for shampoo
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.015, 0.015, 0.015));
+        model = glm::translate(model, glm::vec3(180.0, -9.5, 100.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        shampoo.Draw(&ourShader);
+
+#pragma region Prepare Model, View, Proj Matrix for floor lamp
+        // Create transformations
+        // initialize transform matrix
+        model = glm::mat4(1.0f);
+        // construct transform matrix
+        model = glm::scale(model, glm::vec3(0.015, 0.015, 0.015));
+        model = glm::translate(model, glm::vec3(-270.0, -32.0, 90.0));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+        // Draw object
+        floorLamp.Draw(&ourShader);
+#pragma endregion
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+//#pragma region Draw Skybox
+//        // Draw skybox last
+//        //glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+//        skyboxShader.Use();
+//        model = glm::mat4(1.0f);
+//        model = glm::scale(model, glm::vec3(1000.0, 1000.0, 1000.0));
+//        model = glm::translate(model, glm::vec3(0.0, 20.0, 0.0));
+//        view = camera.GetViewMatrix();
+//        //view = glm::mat4(glm::mat3(camera.GetViewMatrix()));	// Remove any translation component of the view matrix
+//        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+//        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+//        glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+//        // skybox cube
+//        glBindVertexArray(skyboxVAO);
+//        glActiveTexture(GL_TEXTURE0);
+//        glUniform1i(glGetUniformLocation(ourShader.Program, "skybox"), 0);
+//        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+//        glDrawArrays(GL_TRIANGLES, 0, 36);
+//        glBindVertexArray(0);
+//        glDepthFunc(GL_LESS); // set depth function back to default
+//#pragma endregion
+
+        // 3. DEBUG: visualize depth map by rendering it to plane
+        debugDepthQuad.Use();
+        glUniform1f(glGetUniformLocation(debugDepthQuad.Program, "near_plane"), near_plane);
+        glUniform1f(glGetUniformLocation(debugDepthQuad.Program, "far_plane"), far_plane);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        //RenderQuad();
 
 #pragma region Draw house window
         windowShader.Use();
@@ -1148,6 +1157,7 @@ int main()
     glfwTerminate();
     return 0;
 }
+
 
 #pragma region Camera Control
 // Use mouse to control the camera's pitch and yaw
