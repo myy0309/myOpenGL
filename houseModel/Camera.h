@@ -24,7 +24,7 @@ enum Camera_Movement {
 // Default camera values
 const GLfloat YAW = -90.0f;
 const GLfloat PITCH = 0.0f;
-const GLfloat SPEED = 3.0f;
+const GLfloat SPEED = 2.0f;
 const GLfloat SENSITIVTY = 0.25f;
 const GLfloat ZOOM = 45.0f;
 const GLfloat zoomScaler = 0.1f;
@@ -80,27 +80,27 @@ public:
         if (direction == FORWARD)
         {
             this->Position += this->Front * velocity;
-            std::cout << "z+=" << this->Position.z << std::endl;
+            /*std::cout << "z+=" << this->Position.z << std::endl;*/
         }
         if (direction == BACKWARD)
         {
             this->Position -= this->Front * velocity;
-            std::cout << "z-=" << this->Position.z << std::endl;
+            /*std::cout << "z-=" << this->Position.z << std::endl;*/
         }
         if (direction == LEFT)
         {
             this->Position -= this->Right * velocity;
-            std::cout << "x left=" << this->Position.x << std::endl;
+            /*std::cout << "x left=" << this->Position.x << std::endl;*/
         }
         if (direction == RIGHT)
         {
             this->Position += this->Right * velocity;
-            std::cout << "x right=" << this->Position.x << std::endl;
+            /*std::cout << "x right=" << this->Position.x << std::endl;*/
         }
-        /*if (direction == UP)
+        if (direction == UP)
             this->Position += (glm::cross(this->Front, this->Right)) * velocity;
         if (direction == DOWN)
-            this->Position -= (glm::cross(this->Front, this->Right)) * velocity;*/
+            this->Position -= (glm::cross(this->Front, this->Right)) * velocity;
     }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -153,6 +153,7 @@ private:
 
     void verifyRight()
     {
+        this->Position.y = clamp(this->Position.y, 0.5f, 1.0f);
         // living room
         if (this->Position.x > -1.2f && this->Position.x < 2.2f && this->Position.z < 1.4f && this->Position.z > -0.9f)
         {
