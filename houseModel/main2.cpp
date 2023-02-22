@@ -8,7 +8,12 @@
 
 // GLFW
 #include <GLFW/glfw3.h>
-#include <glui/glui.h>
+
+// glut and glui
+#include <GL/glut.h>
+#include<gl/gl.h>
+#include<gl/GLU.h>
+#include <GL/glui.h>
 
 // Other Libs
 #include <SOIL2/SOIL2.h>
@@ -39,9 +44,13 @@ void feedLightPoint(Shader* shader, LightPoint pointLight, std::string lightNum)
 void feedLightDir(Shader* shader, LightDirectional directionalLight);
 unsigned int loadCubemap(std::vector<const GLchar*> faces);
 Material* initMaterialPath(Shader* shader, char const* difTextureName, char const* speTextureName);
-float initHousePara();
+void createGLUTMenus();
+void processMenuEvents(int option);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
+int numOfRoom = 3;
+float scaleFactor = 2.0f;
 
 // Positions of point lights
 glm::vec3 pointLightPositions[] = {
@@ -85,9 +94,10 @@ int main()
     glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     // GLFW Options
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // disable mouse cursor
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -126,12 +136,11 @@ int main()
 #pragma endregion
 
 #pragma region Model Data
-    float scaleFactor = initHousePara();
-    float x = 4 * scaleFactor; // length of the house
-    float z = 0.8 * scaleFactor; // width of the house
-    float y = 0.25 * scaleFactor; // height of the house
-    float delta = 0.2 * scaleFactor;
-    float widthOfDoor = 0.3 * scaleFactor;
+    float x = 4; // length of the house
+    float z = 0.8; // width of the house
+    float y = 0.25; // height of the house
+    float delta = 0.2;
+    float widthOfDoor = 0.3;
     float bedroomDoorPos = -0.3;
     float frontDoorPos = 0.6;
     float diningDoorPos = 0.06;
@@ -500,7 +509,7 @@ int main()
     glBindVertexArray(0);
 #pragma endregion
 
-#pragma region set background images
+#pragma region set background images skybox
     // Cubemap (Skybox)
     std::vector<const GLchar*> faces;
     faces.push_back("..\\res\\textures\\winter\\Backyard\\posxFlip.jpg");
@@ -579,7 +588,7 @@ int main()
         model = glm::mat4(1.0f);
         view = glm::mat4(1.0f);
         projection = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(2, 2, 2));
+        model = glm::scale(model, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
         // construct transform matrix
         view = camera.GetViewMatrix();
         projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
@@ -607,7 +616,7 @@ int main()
         glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), ourShader.SPECULAR);
         // Draw walls
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 108);
+        glDrawArrays(GL_TRIANGLES, 0, 72 + 3*6*(numOfRoom-1));
         glBindVertexArray(0);
 #pragma endregion
 
@@ -643,7 +652,7 @@ int main()
         glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), ourShader.SPECULAR);
         // Draw floor
         glBindVertexArray(woodFloorVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 18);
+        glDrawArrays(GL_TRIANGLES, 0, numOfRoom*6);
         glBindVertexArray(0);
 #pragma endregion
 
@@ -1110,6 +1119,11 @@ void do_movement()
         camera.ProcessKeyboard(UP, deltaTime);
     if (keys[GLFW_KEY_R])
         camera.ProcessKeyboard(DOWN, deltaTime);
+    // scale the house model
+    if (keys[GLFW_KEY_UP])
+        scaleFactor = scaleFactor + 0.1 * deltaTime;
+    if (keys[GLFW_KEY_DOWN])
+        scaleFactor = scaleFactor - 0.1 * deltaTime;
 }
 
 // Is called whenever a key is pressed/released via GLFW
@@ -1125,6 +1139,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 #pragma endregion
 
+#pragma region load texture to GPU
 // generate and bind image texture
 unsigned int loadImageToGPU(const char* filename, GLuint internalFormat, GLenum format, int textureslot)
 {
@@ -1183,7 +1198,21 @@ unsigned int loadTexture(char const* path)
 
     return textureID;
 }
+// construct the texture material texture
+Material* initMaterialPath(Shader* shader, char const* difTextureName, char const* speTextureName)
+{
+    std::string difTexturePath = std::string("..\\res\\textures\\") + difTextureName;
+    std::string speTexturePath = std::string("..\\res\\textures\\") + speTextureName;
+    Material* myMaterial = new Material(shader,
+        loadImageToGPU(difTexturePath.c_str(), GL_RGB, GL_RGB, (*shader).DIFFUSE),
+        loadImageToGPU(speTexturePath.c_str(), GL_RGB, GL_RGB, (*shader).SPECULAR),
+        32.0f
+    );
+    return myMaterial;
+}
+#pragma endregion
 
+#pragma region feed light parameters
 // pass point light parameters to fragment shader
 void feedLightPoint(Shader* shader, LightPoint pointLight, std::string lightNum)
 {
@@ -1203,7 +1232,6 @@ void feedLightPoint(Shader* shader, LightPoint pointLight, std::string lightNum)
     glUniform1f(glGetUniformLocation(shader->Program, nameLinear.c_str()), pointLight.linear);
     glUniform1f(glGetUniformLocation(shader->Program, nameQuadratic.c_str()), pointLight.quadratic);
 }
-
 // pass directional light parameters to fragment shader
 void feedLightDir(Shader* shader, LightDirectional directionalLight)
 {
@@ -1212,6 +1240,7 @@ void feedLightDir(Shader* shader, LightDirectional directionalLight)
     glUniform3f(glGetUniformLocation(shader->Program, "dirLight.diffuse"), directionalLight.diffuse.x, directionalLight.diffuse.y, directionalLight.diffuse.z);
     glUniform3f(glGetUniformLocation(shader->Program, "dirLight.specular"), directionalLight.specular.x, directionalLight.specular.y, directionalLight.specular.z);
 }
+#pragma endregion
 
 // Loads a cubemap texture from 6 individual texture faces
 // Order should be:
@@ -1249,24 +1278,55 @@ unsigned int loadCubemap(std::vector<const GLchar*> faces)
     return textureID;
 }
 
-// construct the texture material texture
-Material* initMaterialPath(Shader* shader, char const* difTextureName, char const* speTextureName)
-{
-    std::string difTexturePath = std::string("..\\res\\textures\\") + difTextureName;
-    std::string speTexturePath = std::string("..\\res\\textures\\") + speTextureName;
-    Material* myMaterial = new Material(shader,
-        loadImageToGPU(difTexturePath.c_str(), GL_RGB, GL_RGB, (*shader).DIFFUSE),
-        loadImageToGPU(speTexturePath.c_str(), GL_RGB, GL_RGB, (*shader).SPECULAR),
-        32.0f
-    );
-    return myMaterial;
+void processMenuEvents(int option) {
+    switch (option) {
+    case 1:
+        numOfRoom = 1;
+        break;
+    case 2:
+        numOfRoom = 2;
+        break;
+    case 3:
+        numOfRoom = 3;
+        break;
+    }
+    glutPostRedisplay();
 }
 
-// initialize the parameters for constructing the house
-float initHousePara() 
+void createGLUTMenus() {
+
+    int menu;
+
+    // create the menu
+    menu = glutCreateMenu(processMenuEvents);
+    // add choices to the menu
+    glutAddMenuEntry("single bedroom", 1);
+    glutAddMenuEntry("two bedrooms", 2);
+    glutAddMenuEntry("three bedrooms", 3);
+    glutLeaveGameMode(); // Must be done to allow menu to be attached
+    // click mouse right buttom to call the menu
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    float scale = 1.0f;
-    std::cout << "Please enter how much you want to scale the house: " << std::endl;
-    std::cin >> scale;
-    return scale;
+    if (action == GLFW_PRESS) switch (button)
+    {
+    case GLFW_MOUSE_BUTTON_LEFT:
+        //createGLUTMenus();
+        numOfRoom = 1;
+        std::cout << "single bedroom" << std::endl;
+        break;
+    case GLFW_MOUSE_BUTTON_MIDDLE:
+        numOfRoom = 2;
+        std::cout << "two bedrooms" << std::endl;
+        break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        numOfRoom = 3;
+        std::cout << "three bedroom" << std::endl;
+        break;
+    default:
+        return;
+    }
+    return;
 }
