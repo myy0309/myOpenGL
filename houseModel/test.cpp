@@ -17,6 +17,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <map>
+#include <vector>
 
 // Other includes
 #include "Shader.h"
@@ -53,6 +54,11 @@ float deltaX = 1.0f;
 float deltaZ = 1.0f;
 // Factors allow user to choose room types
 enum roomType{wood, carpet, marble} myRoom;
+Material *currentMaterial;
+glm::mat4 model = glm::mat4(1.0f);
+// Information comfirmed rooms
+std::vector<glm::mat4> modelArray;
+std::vector< Material*> materialArray;
 // Positions of point lights
 glm::vec3 pointLightPositions[] = {
     glm::vec3(1.0f, 0.4f, -1.2f), // lamp in the living room
@@ -120,6 +126,15 @@ int main()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #pragma endregion
 
+#pragma region operation instructions
+    std::cout << "Use 'I''K''J''L' to change position of room " << std::endl;
+    std::cout << "Use direction keys to change size of room " << std::endl;
+    std::cout << "Use number keys to choose a texture for room " << std::endl;
+    std::cout << "Click left key of mouse to confirm" << std::endl;
+    std::cout << "Click right key of mouse to delete the last room" << std::endl;
+    std::cout << " " << std::endl;
+#pragma endregion
+
 #pragma region Init Shader Program
     // Build and compile our shader program
     Shader ourShader(".\\src\\shaders\\VertexShader.vs", ".\\src\\shaders\\FragmentShader.frag");
@@ -137,7 +152,7 @@ int main()
 #pragma region Model Data
     float x = 1.5; // length of the house
     float z = 1.5; // width of the house
-    float y = 0.25; // height of the house
+    float y = 0.5; // height of the house
     GLfloat vertices[] = {
         // back face
         -x, -y, -z,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -322,7 +337,7 @@ int main()
 #pragma region Draw Skybox
         // Create transformations
         // initialize transform matrix
-        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::mat4(1.0f);
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
         // Draw skybox last
@@ -348,14 +363,11 @@ int main()
         // glDepthFunc(GL_LESS); // set depth function back to default
 #pragma endregion
 
-#pragma region Prepare Model, View, Proj Matrix of house structure
-        // construct transform matrix
+#pragma region draw the comfirmed part
         ourShader.Use();
         model = glm::mat4(1.0f);
         view = glm::mat4(1.0f);
         projection = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(scaleLength, 1.0, scaleWidth));
-        model = glm::translate(model, glm::vec3(deltaX, 1.0, deltaZ));
         // construct transform matrix
         view = camera.GetViewMatrix();
         projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
@@ -364,23 +376,37 @@ int main()
         GLint viewLoc = glGetUniformLocation(ourShader.Program, "view");
         GLint projLoc = glGetUniformLocation(ourShader.Program, "projection");
         // Pass them to the shaders
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        for (int i = 0; i < modelArray.size(); i++)
+            /*for (std::vector<glm::mat4>::iterator iter = modelArray.begin(); iter != modelArray.end(); iter++)*/
+        {
+            model = modelArray[i];
+            loadFloorMaterial(&ourShader, materialArray[i]);
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            // Draw floor
+            glBindVertexArray(floorVAO);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glBindVertexArray(0);
+            // Draw walls
+            loadFloorMaterial(&ourShader, myMaterial);
+            glBindVertexArray(VAO);
+            glDrawArrays(GL_TRIANGLES, 0, 24);
+            glBindVertexArray(0);
+        }
 #pragma endregion
 
-#pragma region Load Textures for house structure
-        // Pass material information to shader
-        GLint matShineLoc = glGetUniformLocation(ourShader.Program, "material.shininess");
-        glUniform1f(matShineLoc, myMaterial->shininess);
-        // Pass diffuse map information to fragment shader
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, myMaterial->diffuse);
-        glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), ourShader.DIFFUSE);
-        // Pass specular map information to fragment shader
-        glActiveTexture(GL_TEXTURE0 + 1);
-        glBindTexture(GL_TEXTURE_2D, myMaterial->specular);
-        glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), ourShader.SPECULAR);
+#pragma region Prepare Model, View, Proj Matrix of house structure
+        // construct transform matrix
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(scaleLength, 1.0, scaleWidth));
+        model = glm::translate(model, glm::vec3(deltaX, 1.0, deltaZ));
+        // Pass them to the shaders
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+#pragma endregion
+
+#pragma region Load Textures for house walls and draw them
+        loadFloorMaterial(&ourShader, myMaterial);
         // Draw walls
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 24);
@@ -392,22 +418,43 @@ int main()
         switch (myRoom)
         {
         case wood:
-            loadFloorMaterial(&ourShader, woodFloorMaterial); 
+            currentMaterial = woodFloorMaterial; 
             break;
         case carpet:
-            loadFloorMaterial(&ourShader, livingroomFloorMaterial);
+            currentMaterial = livingroomFloorMaterial;
             break;
         case marble:
-            loadFloorMaterial(&ourShader, tileFloorMaterial);
+            currentMaterial = tileFloorMaterial;
             break;
         default:
             break;
         }
         // Draw floor
+        loadFloorMaterial(&ourShader, currentMaterial);
         glBindVertexArray(floorVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 #pragma endregion
+
+//#pragma region draw the comfirmed part
+//        for (int i = 0 ; i < modelArray.size(); i++)
+//        /*for (std::vector<glm::mat4>::iterator iter = modelArray.begin(); iter != modelArray.end(); iter++)*/
+//        {
+//            //std::cout << modelArray.size() << std::endl;
+//            model = modelArray[i];
+//            loadFloorMaterial(&ourShader, materialArray[i]);
+//            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+//            // Draw floor
+//            glBindVertexArray(floorVAO);
+//            glDrawArrays(GL_TRIANGLES, 0, 6);
+//            glBindVertexArray(0);
+//            // Draw walls
+//            loadFloorMaterial(&ourShader, myMaterial);
+//            glBindVertexArray(VAO);
+//            glDrawArrays(GL_TRIANGLES, 0, 24);
+//            glBindVertexArray(0);
+//        }
+//#pragma endregion
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
@@ -476,13 +523,13 @@ void do_movement()
         scaleLength = scaleLength + 0.15 * deltaTime;
     // move the house model
     if (keys[GLFW_KEY_I])
-        deltaZ = deltaZ - 0.2 * deltaTime;
+        deltaZ = deltaZ - 0.4 * deltaTime;
     if (keys[GLFW_KEY_K])
-        deltaZ = deltaZ + 0.2 * deltaTime;
+        deltaZ = deltaZ + 0.4 * deltaTime;
     if (keys[GLFW_KEY_J])
-        deltaX = deltaX - 0.2 * deltaTime;
+        deltaX = deltaX - 0.4 * deltaTime;
     if (keys[GLFW_KEY_L])
-        deltaX = deltaX + 0.2 * deltaTime;
+        deltaX = deltaX + 0.4 * deltaTime;
     // choose floor texture
     if (keys[GLFW_KEY_1])
         myRoom = wood;
@@ -502,6 +549,31 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         keys[key] = true;
     else if (action == GLFW_RELEASE)
         keys[key] = false;
+}
+
+// Use mouse click to add or delete new rooms
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (action == GLFW_PRESS) switch (button)
+    {
+    case GLFW_MOUSE_BUTTON_LEFT:
+    {
+        modelArray.push_back(model);
+        materialArray.push_back(currentMaterial);
+        std::cout << "finish a room" << std::endl;
+        break;;
+    }
+    case GLFW_MOUSE_BUTTON_RIGHT:
+    {
+        modelArray.pop_back();
+        materialArray.pop_back();
+        std::cout << "delete a room" << std::endl;
+        break;
+    }
+    default:
+        return;
+    }
+    return;
 }
 #pragma endregion
 
@@ -661,26 +733,3 @@ unsigned int loadCubemap(std::vector<const GLchar*> faces)
     return textureID;
 }
 #pragma endregion
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    //if (action == GLFW_PRESS) switch (button)
-    //{
-    //case GLFW_MOUSE_BUTTON_LEFT:
-    //    //createGLUTMenus();
-    //    numOfRoom = 1;
-    //    std::cout << "single bedroom" << std::endl;
-    //    break;
-    //case GLFW_MOUSE_BUTTON_MIDDLE:
-    //    numOfRoom = 2;
-    //    std::cout << "two bedrooms" << std::endl;
-    //    break;
-    //case GLFW_MOUSE_BUTTON_RIGHT:
-    //    numOfRoom = 3;
-    //    std::cout << "three bedroom" << std::endl;
-    //    break;
-    //default:
-    //    return;
-    //}
-    return;
-}
